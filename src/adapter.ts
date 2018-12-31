@@ -15,8 +15,7 @@ import { runFakeTests } from './fakeTests';
 import * as childProcess from 'child_process';
 
 /**
- * This class is intended as a starting point for implementing a "real" TestAdapter.
- * The file `README.md` contains further instructions.
+ *
  */
 export class RustAdapter implements TestAdapter {
 
@@ -120,6 +119,9 @@ export class RustAdapter implements TestAdapter {
             const packageTests = await Promise.all(packages.map(async p => {
                 const packageDirectory = p.manifest_path.replace('Cargo.toml', '');
                 const output = await this.loadPackageTests(packageDirectory);
+                if (output.indexOf('0 tests,') === 0) {
+                    return;
+                }
                 return <TestSuiteInfo>{
                     id: p.name,
                     type: 'suite',
@@ -127,35 +129,36 @@ export class RustAdapter implements TestAdapter {
                     children: this.parseOutput(p.name, output)
                 };
             }));
-            const testSuite = this.buildRootTestSuiteInfoNode(packageTests);
-            return Promise.resolve(testSuite);
+            // This condition will evaluate to true when there are no unit tests.
+            if (packageTests.length >= 1 && !packageTests[0]) {
+                return Promise.resolve(null);
+            }
+            return Promise.resolve(this.buildRootTestSuiteInfoNode(packageTests));
         } catch (err) {
             return Promise.reject(err);
         }
     }
 
     public async load(): Promise<void> {
-
         this.log.info('Loading example tests');
-
         this.testsEmitter.fire(<TestLoadStartedEvent>{ type: 'started' });
+
         const loadedTests = await this.loadReal();
 
-        this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished', suite: loadedTests });
-
+        if (!loadedTests) {
+            this.log.info('No unit tests found');
+            this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished' });
+        } else {
+            this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished', suite: loadedTests });
+        }
     }
 
     public async run(tests: string[]): Promise<void> {
-
         this.log.info(`Running example tests ${JSON.stringify(tests)}`);
-
         this.testStatesEmitter.fire(<TestRunStartedEvent>{ type: 'started', tests });
-
         // in a "real" TestAdapter this would start a test run in a child process
         await runFakeTests(tests, this.testStatesEmitter);
-
         this.testStatesEmitter.fire(<TestRunFinishedEvent>{ type: 'finished' });
-
     }
 
     // eslint-disable-next-line no-unused-vars
