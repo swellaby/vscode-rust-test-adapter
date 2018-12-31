@@ -1,0 +1,39 @@
+{
+  "files.exclude": {
+      "**/*.js": { "when": "$(basename).ts" },
+      "**/*.map": { "when": "$(basename).map" },
+      "npm-debug.log": true,
+      ".coverage": true,
+      ".testresults": true,
+      "node_modules": true,
+      ".nyc_output": true,
+  },
+  "testExplorer.codeLens": true,
+  "mochaExplorer.nodePath": null,
+  "mochaExplorer.optsFile": "test/unit/mocha.opts",
+  "cSpell.enabled": true,
+  "cSpell.enabledLanguageIds": [
+      "asciidoc",
+      "html",
+      "javascript",
+      "json",
+      "markdown",
+      "plaintext",
+      "restructuredtext",
+      "scss",
+      "text",
+      "typescript",
+      "yaml",
+      "yml"
+  ],
+  "cSpell.dictionaries": [
+    "companies",
+    "en_us",
+    "filetypes",
+    "golang",
+    "misc",
+    "node",
+    "npm",
+    "softwareTerms"
+  ]
+}

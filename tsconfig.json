@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "es2016",
+    "lib": [ "es2016" ],
+    "module": "commonjs",
+    "importHelpers": true,
+    "sourceMap": true,
+    "removeComments": false,
+    "noImplicitAny": false,
+  },
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts"
+  ]
+}

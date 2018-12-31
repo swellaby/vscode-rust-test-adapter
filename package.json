@@ -1,0 +1,126 @@
+{
+  "name": "vscode-rust-test-adapter",
+  "displayName": "Rust Test Explorer",
+  "description": "View and run your Rust tests in the Sidebar of Visual Studio Code",
+  "version": "0.0.1",
+  "license": "MIT",
+  "preview": true,
+	"private": true,
+	"publisher": "Swellaby",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/swellaby/vscode-rust-test-adapter.git"
+  },
+  "author": {
+    "url": "http://swellaby.com",
+    "name": "Swellaby",
+    "email": "opensource@swellaby.com"
+  },
+  "contributors": [
+    {
+      "email": "opensource@swellaby.com",
+      "name": "Caleb Cartwright",
+      "url": "https://github.com/calebcartwright"
+    }
+  ],
+  "bugs": {
+    "url": "https://github.com/swellaby/vscode-rust-test-adapter/issues/choose"
+  },
+  "scripts": {
+    "postinstall": "node ./node_modules/vscode/bin/install",
+    "build": "npm run coverage:enforce && npm run lint:build",
+    "clean:test": "rimraf .testresults .coverage",
+    "clean:test:unit": "rimraf .testresults/unit .coverage/unit",
+    "clean:js": "rimraf test/**/{*.js,*.map} src/**/{*.js,*.map}",
+    "clean": "npm run clean:test && npm run clean:js",
+    "pretranspile": "npm run clean:js",
+    "transpile": "tsc -p tsconfig.json",
+    "tslint": "tslint -p tsconfig.json -c tslint.json -t stylish src/**/*.ts test/**/*.ts",
+    "eslint:build": "eslint -c .eslintrc.js **/*.js",
+    "eslint": "npm run eslint:build",
+    "preeslint": "npm run transpile",
+    "lint": "npm run tslint && npm run eslint",
+    "lint:build": "npm run tslint && npm run eslint:build",
+    "test": "npm run test:unit",
+    "pretest:unit": "npm run transpile && npm run clean:test:unit",
+    "test:unit": "mocha --opts test/unit/mocha.opts",
+    "posttest:unit": "replace-in-file --isRegex true \"/(.js)/g\" .ts .testresults/unit/sonar.xml",
+    "coverage": "npm run coverage:unit",
+    "coverage:enforce": "npm run coverage:unit:enforce",
+    "coverage:open": "npm run coverage:unit:open",
+    "coverage:unit": "nyc --report-dir .coverage/unit --check-coverage false npm run test:unit",
+    "coverage:unit:enforce": "nyc --report-dir .coverage/unit npm run test:unit",
+    "coverage:unit:open": "npm run coverage:unit && opn .coverage/unit/index.html",
+    "package:vsix": "vsce package -o .vsix/$npm_package_name-$npm_package_version.vsix",
+		"prepackage:vsix": "mkdirp .vsix",
+		"package:vsix:windows": "vsce package -o .vsix/%npm_package_name%-%npm_package_version%.vsix",
+		"prepackage:vsix:windows": "mkdirp .vsix",
+		"publish:vsix": "vsce publish --packagePath .vsix/$npm_package_name-$npm_package_version.vsix",
+		"publish:vsix:windows": "vsce publish --packagePath .vsix/%npm_package_name%-%npm_package_version%.vsix",
+		"publish:ext": "vsce publish patch",
+		"vsce:login": "vsce login swellaby",
+		"vsce": "vsce",
+    "dev:reset": "npm run clean && node -e \"require('rimraf').sync('node_modules');\" && npm run dev:setup",
+    "dev:setup": "npm i && npm i -g yo && npm run build"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "test",
+    "testing",
+    "rust"
+  ],
+  "main": "src/main.js",
+  "dependencies": {
+    "tslib": "^1.9.3",
+    "vscode-test-adapter-api": "^1.1.0",
+    "vscode-test-adapter-util": "^0.5.1"
+  },
+  "devDependencies": {
+    "@swellaby/eslint-config": "^1.1.6",
+    "@swellaby/nyc-config": "^1.1.0",
+    "@swellaby/tslint-config": "^2.0.1",
+    "@types/chai": "^4.1.7",
+    "@types/mocha": "^5.2.5",
+    "@types/node": "^10.12.18",
+    "@types/sinon": "^7.0.2",
+    "chai": "^4.2.0",
+    "eslint": "^5.11.1",
+    "husky": "^1.3.1",
+    "mocha": "^5.2.0",
+    "mocha-multi-reporters": "^1.1.7",
+    "mocha-sonarqube-reporter": "^1.0.1",
+    "nyc": "^13.1.0",
+    "opn-cli": "^4.0.0",
+    "replace-in-file": "^3.4.2",
+    "rimraf": "^2.6.2",
+    "sinon": "^7.2.2",
+    "tslint": "^5.12.0",
+    "typescript": "^3.2.2",
+    "vsce": "^1.54.0",
+    "vscode": "^1.1.26"
+  },
+  "engines": {
+    "vscode": "^1.23.0"
+  },
+  "extensionDependencies": [
+    "hbenl.vscode-test-explorer"
+  ],
+  "activationEvents": [
+    "*"
+  ],
+  "contributes": {
+    "configuration": {
+      "type": "object",
+      "title": "Rust Test Explorer configuration",
+      "properties": {
+        "rustTestExplorer.rootCargoManifestFilePath": {
+          "description": "The root Cargo.toml manifest file for the workspace",
+          "type": "string",
+          "scope": "resource"
+        }
+      }
+    }
+  }
+}

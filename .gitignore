@@ -1,0 +1,15 @@
+.testresults/
+.coverage/
+.nyc_output/
+.vsix/
+node_modules/
+
+src/**/*.js*
+test/**/*.js*
+!**/*.json
+**/*.d.ts
+
+*.tar*
+*.tgz*
+.ntvs_analysis.dat*
+npm-debug*
