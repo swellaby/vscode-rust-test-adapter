@@ -7,9 +7,7 @@ import {
     TestLoadFinishedEvent,
     TestRunStartedEvent,
     TestRunFinishedEvent,
-    TestInfo,
     TestSuiteInfo
-    // TestSuiteEvent
 } from 'vscode-test-adapter-api';
 import { Log } from 'vscode-test-adapter-util';
 import { loadUnitTests } from './test-loader';

@@ -7,6 +7,7 @@
   "preview": true,
   "private": true,
   "publisher": "Swellaby",
+  "icon": "images/icon.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/swellaby/vscode-rust-test-adapter.git"

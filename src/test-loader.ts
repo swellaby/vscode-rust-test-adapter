@@ -16,9 +16,7 @@ const loadPackageTests = async (packageDirectoryPath: string): Promise<string> =
     };
     childProcess.exec('cargo test -- --list', execArgs, (err, stdout) => {
         if (err) {
-            // console.log(`got error on cargo test list`);
-            // console.log(`err: ${err}`);
-            return reject();
+            return reject(err);
         }
         resolve(stdout);
     });
