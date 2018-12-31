@@ -10,7 +10,7 @@ const runCargoTestCommand = async(packageName: string, workspaceRootDir: string,
     };
     const command = `cargo test --lib -p ${packageName} ${
         testFilter
-        ? `${testFilter}`
+        ? `${testFilter} -- --exact`
         : '' }`;
     childProcess.exec(command, execArgs, (err, stdout, stderr) => {
         // If there are failed tests then stderr will be truthy so we want to return stdout.
@@ -18,7 +18,6 @@ const runCargoTestCommand = async(packageName: string, workspaceRootDir: string,
             console.log('crash');
             return reject(err);
         }
-        // console.log(`stdout: ${stdout}`);
         resolve(stdout);
     });
 });
@@ -42,8 +41,8 @@ const parseTestResult = (packageName: string, testOutputLine: string): TestEvent
     };
 };
 
-const parseTestOutput = (packageName: string, output: string): TestEvent[] => {
-    const testResultEvents: TestEvent[] = [];
+const parseTestCaseResultOutput = (packageName: string, output: string): TestEvent => {
+    let testResult: TestEvent;
     const startMessageIndex = output.search(/running \d* (test|tests)/);
     if (startMessageIndex > 0) {
         const startMessageEndIndex = output.indexOf('\n', startMessageIndex);
@@ -51,36 +50,26 @@ const parseTestOutput = (packageName: string, output: string): TestEvent[] => {
         if (startMessageSummary !== 'running 0 tests') {
             const testResultsOutput = output.substring(startMessageEndIndex + 1).split('\n\n')[0];
             const testResults = testResultsOutput.split('\n');
-            testResults.forEach(t => {
-                testResultEvents.push(parseTestResult(packageName, t));
-            });
+            testResult = parseTestResult(packageName, testResults[0]);
         }
     }
 
-    return testResultEvents;
+    return testResult;
 };
 
-const runTestsForNode = async (nodeId: string, workspaceRootDir: string) => new Promise<TestEvent[]>(async (resolve, reject) => {
+export const runTestCase = async (testCaseNodeId: string, workspaceRootDir: string) => new Promise<TestEvent>(async (resolve, reject) => {
     try {
-        let packageName = nodeId;
+        let packageName = testCaseNodeId;
         let testFilter;
-        const packageDelimiterIndex = nodeId.indexOf('::');
+        const packageDelimiterIndex = testCaseNodeId.indexOf('::');
         if (packageDelimiterIndex > 0) {
-            packageName = nodeId.substring(0, packageDelimiterIndex);
-            testFilter = nodeId.substring(packageDelimiterIndex + 2);
+            packageName = testCaseNodeId.substring(0, packageDelimiterIndex);
+            testFilter = testCaseNodeId.substring(packageDelimiterIndex + 2);
         }
-        console.log(`for package: ${packageName}, using filter: ${testFilter}`);
         const output = await runCargoTestCommand(packageName, workspaceRootDir, testFilter);
-        resolve(parseTestOutput(packageName, output));
+        resolve(parseTestCaseResultOutput(packageName, output));
     } catch (err) {
         console.log(`runTestsForNode Error: ${err}`);
         reject(err);
     }
-});
-
-export const runTests = async (testNodeIds: string[], workspaceRootDir: string) => new Promise<TestEvent[]>(async (resolve, reject) => {
-    const testEvents = await Promise.all(testNodeIds.map(async id => {
-        return await runTestsForNode(id, workspaceRootDir);
-    }));
-    resolve([].concat(...testEvents));
 });

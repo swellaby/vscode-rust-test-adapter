@@ -14,7 +14,7 @@ import {
 import { Log } from 'vscode-test-adapter-util';
 import { loadUnitTests } from './test-loader';
 import { IDisposable } from './interfaces/disposable';
-import { runTests } from './test-runner';
+import { runTestCase } from './test-runner';
 
 /**
  *
@@ -55,7 +55,6 @@ export class RustAdapter implements TestAdapter {
                 this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished' });
             } else {
                 this.loadedTestSuites = loadedTests.testSuitesMap;
-
                 this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished', suite: loadedTests.rootNode });
             }
         } catch (err) {
@@ -63,12 +62,12 @@ export class RustAdapter implements TestAdapter {
         }
     }
 
-    private extractTestNodeIds(searchNodeIds: string[], testNodeIds: string[]) {
+    private extractTestCaseIdsFromNodes(searchNodeIds: string[], testNodeIds: string[]) {
         searchNodeIds.forEach(nodeId => {
             if (this.loadedTestSuites.has(nodeId)) {
                 const testSuite = this.loadedTestSuites.get(nodeId);
                 const childrenIds = testSuite.children.map(c => c.id);
-                return this.extractTestNodeIds(childrenIds, testNodeIds);
+                return this.extractTestCaseIdsFromNodes(childrenIds, testNodeIds);
             } else {
                 return testNodeIds.push(nodeId);
             }
@@ -76,14 +75,14 @@ export class RustAdapter implements TestAdapter {
     }
 
     public async run(nodeIds: string[]): Promise<void> {
-        this.log.info(`Running example tests ${JSON.stringify(nodeIds)}`);
+        this.log.info('Running Rust Tests');
         this.testStatesEmitter.fire(<TestRunStartedEvent>{ type: 'started', tests: nodeIds });
-        const testNodeIds: string[] = [];
-        this.extractTestNodeIds(nodeIds, testNodeIds);
-        const testResults = await runTests(testNodeIds, this.workspaceRootDirectoryPath);
-        testResults.forEach(tr => {
-            this.testStatesEmitter.fire(<TestEvent>tr);
-        });
+        const testCaseIds: string[] = [];
+        this.extractTestCaseIdsFromNodes(nodeIds, testCaseIds);
+        await Promise.all(testCaseIds.map(async id => {
+            const result = await runTestCase(id, this.workspaceRootDirectoryPath);
+            this.testStatesEmitter.fire(<TestEvent>result);
+        }));
         this.testStatesEmitter.fire(<TestRunFinishedEvent>{ type: 'finished' });
     }
 
