@@ -1,3 +1,5 @@
+'use strict';
+
 import {
     TestAdapter,
     // TestEvent,
@@ -42,14 +44,21 @@ export class RustAdapter implements TestAdapter {
         this.log.info('Loading Rust Tests');
         this.testsEmitter.fire(<TestLoadStartedEvent>{ type: 'started' });
 
-        const loadedTests = await loadUnitTests(this.workspaceRootDirectoryPath);
+        try {
+            const loadedTests = await loadUnitTests(this.workspaceRootDirectoryPath);
 
-        if (!loadedTests) {
-            this.log.info('No unit tests found');
-            this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished' });
-        } else {
-            this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished', suite: loadedTests });
+            if (!loadedTests) {
+                this.log.info('No unit tests found');
+                this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished' });
+            } else {
+                console.log(`loaded: ${JSON.stringify(loadedTests)}`);
+                this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished', suite: loadedTests });
+            }
+        } catch (err) {
+            console.log(`crashhhheeeddd`);
+            console.log(`err: ${err}`);
         }
+
     }
 
     public async run(tests: string[]): Promise<void> {

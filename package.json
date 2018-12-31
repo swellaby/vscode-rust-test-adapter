@@ -74,6 +74,7 @@
   ],
   "main": "src/main.js",
   "dependencies": {
+    "toml": "^2.3.3",
     "tslib": "^1.9.3",
     "vscode-test-adapter-api": "^1.1.0",
     "vscode-test-adapter-util": "^0.5.1"

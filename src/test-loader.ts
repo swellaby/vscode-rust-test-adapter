@@ -2,30 +2,59 @@
 
 import * as childProcess from 'child_process';
 
-import { ICargoMetadata } from './interfaces/cargo-metadata';
+import { ICargoManifest } from './interfaces/cargo-manifest';
 import { ICargoPackage } from './interfaces/cargo-package';
 import { TestInfo, TestSuiteInfo } from 'vscode-test-adapter-api';
+import * as toml from 'toml';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const loadPackageTests = async (packageDirectoryPath: string): Promise<string> => new Promise<string>((resolve, reject) => {
-    childProcess.exec('cargo test -- --list', { cwd: packageDirectoryPath }, (err, stdout) => {
+    const execArgs: childProcess.ExecOptions = {
+        cwd: packageDirectoryPath,
+        maxBuffer: 200 * 1024
+    };
+    childProcess.exec('cargo test -- --list', execArgs, (err, stdout) => {
         if (err) {
+            // console.log(`got error on cargo test list`);
+            // console.log(`err: ${err}`);
             return reject();
         }
         resolve(stdout);
     });
 });
 
-const getPackages = async (cargoManifestRootDirectory: string): Promise<ICargoPackage[]> => new Promise<ICargoPackage[]>((resolve, reject) => {
-    const execArgs: childProcess.ExecOptions = {
-        cwd: cargoManifestRootDirectory
-    };
-    childProcess.exec('cargo metadata --format-version 1', execArgs, (err, stdout) => {
+const parseCargoManifest = async (cargoManifestRootDirectory: string): Promise<ICargoManifest> => new Promise<ICargoManifest>((resolve, reject) => {
+    fs.readFile(path.join(cargoManifestRootDirectory, 'Cargo.toml'), (err, data) => {
         if (err) {
-            return reject();
+            reject(err);
         }
-        const cargoMetadata = <ICargoMetadata> JSON.parse(stdout);
-        resolve(cargoMetadata.packages);
+        const parsed = toml.parse(data.toString());
+        resolve(<ICargoManifest>{
+            cargoPackage: parsed.package,
+            workspace: parsed.workspace
+        });
     });
+});
+
+const getPackages = async (cargoManifestRootDirectory: string): Promise<ICargoPackage[]> => new Promise<ICargoPackage[]>(async (resolve, reject) => {
+    const rootCargoManifest = await parseCargoManifest(cargoManifestRootDirectory);
+    const packages: ICargoPackage[] = [];
+    if (!rootCargoManifest.workspace) {
+        packages.push({
+            packageRootDirectoryPath: cargoManifestRootDirectory,
+            name: rootCargoManifest.cargoPackage.name
+        });
+    } else {
+        await Promise.all(rootCargoManifest.workspace.members.map(async m => {
+            const manifest = await parseCargoManifest(path.join(cargoManifestRootDirectory, m));
+            packages.push({
+                name: manifest.cargoPackage.name,
+                packageRootDirectoryPath: path.join(cargoManifestRootDirectory, m)
+            });
+        }));
+    }
+    resolve(packages);
 });
 
 const parseOutput = (packageName: string, output: string): TestSuiteInfo[] => {
@@ -34,20 +63,23 @@ const parseOutput = (packageName: string, output: string): TestSuiteInfo[] => {
     const testModulesMap: Map<string, TestSuiteInfo> = new Map<string, TestSuiteInfo>();
     testLines.forEach(testLine => {
         const line = testLine.split(': test')[0].split('::');
-        const testModule = line[0];
+        const rootTestModule = line[0];
         const testName = line[1];
-        let moduleTestSuite = testModulesMap.get(testModule);
+        // for (let i = 0; i < line.length - 2; i++) {
+
+        // }
+        let moduleTestSuite = testModulesMap.get(rootTestModule);
         if (!moduleTestSuite) {
             moduleTestSuite = {
-                id: `${packageName}:${testModule}`,
-                label: testModule,
+                id: `${packageName}:${rootTestModule}`,
+                label: rootTestModule,
                 type: 'suite',
                 children: []
             };
-            testModulesMap.set(testModule, moduleTestSuite);
+            testModulesMap.set(rootTestModule, moduleTestSuite);
         }
         const test: TestInfo = {
-            id: `${packageName}:${testModule}:${testName}`,
+            id: `${packageName}:${rootTestModule}:${testName}`,
             label: testName,
             type: 'test'
         };
@@ -74,8 +106,8 @@ export const loadUnitTests = async (workspaceRoot: string): Promise<TestSuiteInf
     try {
         const packages = await getPackages(workspaceRoot);
         const packageTests = await Promise.all(packages.map(async p => {
-            const packageDirectory = p.manifest_path.replace('Cargo.toml', '');
-            const output = await loadPackageTests(packageDirectory);
+            const output = await loadPackageTests(p.packageRootDirectoryPath);
+            console.log(`package: ${p.name}`);
             if (output.indexOf('0 tests,') === 0) {
                 return undefined;
             }

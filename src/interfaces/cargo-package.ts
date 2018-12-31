@@ -1,6 +1,6 @@
 'use strict';
 
 export interface ICargoPackage {
-    manifest_path: string;
+    packageRootDirectoryPath: string;
     name: string;
 }
