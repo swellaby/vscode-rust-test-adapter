@@ -1,10 +1,10 @@
 {
     "extends": "@swellaby/nyc-config",
     "include": [
-        "src/**/*.ts"
+      "src/**/*"
     ],
     "exclude": [
       "src/interfaces/**",
-      "src/main.ts"
+      "src/main.*"
     ]
 }
