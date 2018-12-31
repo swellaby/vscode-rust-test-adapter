@@ -8,7 +8,7 @@ const runCargoTestCommand = async(packageName: string, workspaceRootDir: string,
         cwd: workspaceRootDir,
         maxBuffer: 200 * 1024
     };
-    const command = `cargo test -p ${packageName} ${
+    const command = `cargo test --lib -p ${packageName} ${
         testFilter
         ? `${testFilter}`
         : '' }`;
@@ -50,7 +50,6 @@ const parseTestOutput = (packageName: string, output: string): TestEvent[] => {
         const startMessageSummary = output.substring(startMessageIndex, startMessageEndIndex);
         if (startMessageSummary !== 'running 0 tests') {
             const testResultsOutput = output.substring(startMessageEndIndex + 1).split('\n\n')[0];
-            // console.log(`testResultsOutput for ${packageName}:\n${testResultsOutput}\n`);
             const testResults = testResultsOutput.split('\n');
             testResults.forEach(t => {
                 testResultEvents.push(parseTestResult(packageName, t));
@@ -70,7 +69,6 @@ const runTestsForNode = async (nodeId: string, workspaceRootDir: string) => new 
             packageName = nodeId.substring(0, packageDelimiterIndex);
             testFilter = nodeId.substring(packageDelimiterIndex + 2);
         }
-        // console.log(`about to run tests for package: ${packageName}`);
         const output = await runCargoTestCommand(packageName, workspaceRootDir, testFilter);
         resolve(parseTestOutput(packageName, output));
     } catch (err) {
