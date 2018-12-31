@@ -68,7 +68,6 @@ async function runNode(
     node: TestSuiteInfo | TestInfo,
     testStatesEmitter: vscode.EventEmitter<TestRunStartedEvent | TestRunFinishedEvent | TestSuiteEvent | TestEvent>
 ): Promise<void> {
-
     if (node.type === 'suite') {
 
         testStatesEmitter.fire(<TestSuiteEvent>{ type: 'suite', suite: node.id, state: 'running' });

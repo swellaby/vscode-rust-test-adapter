@@ -2,23 +2,27 @@
 
 import {
     TestAdapter,
-    // TestEvent,
+    TestEvent,
     TestLoadStartedEvent,
     TestLoadFinishedEvent,
     TestRunStartedEvent,
-    TestRunFinishedEvent
+    TestRunFinishedEvent,
+    TestInfo,
+    TestSuiteInfo
     // TestSuiteEvent
 } from 'vscode-test-adapter-api';
 import { Log } from 'vscode-test-adapter-util';
 import { runFakeTests } from './fakeTests';
 import { loadUnitTests } from './test-loader';
 import { IDisposable } from './interfaces/disposable';
+import { runTests } from './test-runner';
 
 /**
  *
  */
 export class RustAdapter implements TestAdapter {
     private disposables: IDisposable[] = [];
+    private loadedTests: TestSuiteInfo;
 
     get tests() { return this.testsEmitter.event; }
     get testStates() { return this.testStatesEmitter.event; }
@@ -51,7 +55,7 @@ export class RustAdapter implements TestAdapter {
                 this.log.info('No unit tests found');
                 this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished' });
             } else {
-                // console.log(`loaded: ${JSON.stringify(loadedTests)}`);
+                this.loadedTests = loadedTests;
                 this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished', suite: loadedTests });
             }
         } catch (err) {
@@ -64,8 +68,14 @@ export class RustAdapter implements TestAdapter {
     public async run(tests: string[]): Promise<void> {
         this.log.info(`Running example tests ${JSON.stringify(tests)}`);
         this.testStatesEmitter.fire(<TestRunStartedEvent>{ type: 'started', tests });
-        // in a "real" TestAdapter this would start a test run in a child process
-        await runFakeTests(tests, this.testStatesEmitter);
+        let testNodeIds = tests;
+        if (tests.length === 1 && tests[0] === 'root') {
+            testNodeIds = this.loadedTests.children.map(s => s.id);
+        }
+        const testResults = await runTests(testNodeIds, this.workspaceRootDirectoryPath);
+        testResults.forEach(tr => {
+            this.testStatesEmitter.fire(<TestEvent>tr);
+        });
         this.testStatesEmitter.fire(<TestRunFinishedEvent>{ type: 'finished' });
     }
 

@@ -5,7 +5,7 @@ import * as Sinon from 'sinon';
 import { Log } from 'vscode-test-adapter-util';
 import { RustAdapter } from '../../src/rust-adapter';
 
-suite('RustAdapater Tests:', () => {
+suite('RustAdapter Tests:', () => {
     let logInfoStub: Sinon.SinonStub;
     let logStub: Log;
     let rustAdapter: RustAdapter;
