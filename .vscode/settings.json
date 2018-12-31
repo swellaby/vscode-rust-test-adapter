@@ -5,13 +5,23 @@
       "npm-debug.log": true,
       ".coverage": true,
       ".testresults": true,
-      "node_modules": true,
       ".nyc_output": true,
+      "node_modules": true,
+      ".vsix": true
   },
   "testExplorer.codeLens": true,
   "mochaExplorer.nodePath": null,
   "mochaExplorer.optsFile": "test/unit/mocha.opts",
   "cSpell.enabled": true,
+  "cSpell.ignorePaths": [
+    "**/package-lock.json",
+    "**/node_modules/**",
+    "**/.git/**",
+    ".vscode",
+    ".gitignore",
+    ".editorconfig",
+    ".vscodeignore"
+  ],
   "cSpell.enabledLanguageIds": [
       "asciidoc",
       "html",

@@ -2,8 +2,19 @@
     "version": "0.1",
     "language": "en",
     "words": [
+      "hbenl",
       "opensource",
-      "swellaby"
+      "posttest",
+      "preeslint",
+      "pretest",
+      "pretranspile",
+      "sonarqube",
+      "swellaby",
+      "testresults",
+      "toml",
+      "tslib",
+      "vsce",
+      "vsix"
     ],
     "flagWords": [
 
