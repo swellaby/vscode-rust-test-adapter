@@ -5,7 +5,7 @@ import * as Sinon from 'sinon';
 // import { Log } from 'vscode-test-adapter-util';
 import { runTests } from '../../src/test-runner';
 
-suite('RustAdapter Tests:', () => {
+suite('testRunner Tests:', () => {
     // setup(() => {
     // });
 
@@ -18,16 +18,24 @@ suite('RustAdapter Tests:', () => {
         //     'crate2::tests::test_add',
         //     'crate2::tests::test_bad_add'
         // ];
+        // const testNodeIds = [
+        //     'crate2',
+        //     'foo',
+        //     'waka',
+        //     'src'
+        // ];
         const testNodeIds = [
-            'crate2',
-            'foo',
-            'waka',
-            'src'
+            'cargo::sources::git'
         ];
-        const workspaceDir = 'c:/dev/rust-samples/calc-test';
+        // const workspaceDir = 'c:/dev/rust-samples/calc-test';
+        const workspaceDir = 'c:/dev/cargo';
         const testResults = await runTests(testNodeIds, workspaceDir);
         testResults.forEach(tr => {
             console.log(`Test ${tr.test} resulted in: ${tr.state}`);
         });
+    });
+
+    test('foo', () => {
+        assert.isTrue(false);
     });
 });

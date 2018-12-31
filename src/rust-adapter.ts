@@ -12,7 +12,6 @@ import {
     // TestSuiteEvent
 } from 'vscode-test-adapter-api';
 import { Log } from 'vscode-test-adapter-util';
-import { runFakeTests } from './fakeTests';
 import { loadUnitTests } from './test-loader';
 import { IDisposable } from './interfaces/disposable';
 import { runTests } from './test-runner';
@@ -22,7 +21,7 @@ import { runTests } from './test-runner';
  */
 export class RustAdapter implements TestAdapter {
     private disposables: IDisposable[] = [];
-    private loadedTests: TestSuiteInfo;
+    private loadedTestSuites: Map<string, TestSuiteInfo> = new Map<string, TestSuiteInfo>();
 
     get tests() { return this.testsEmitter.event; }
     get testStates() { return this.testStatesEmitter.event; }
@@ -55,23 +54,32 @@ export class RustAdapter implements TestAdapter {
                 this.log.info('No unit tests found');
                 this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished' });
             } else {
-                this.loadedTests = loadedTests;
-                this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished', suite: loadedTests });
+                this.loadedTestSuites = loadedTests.testSuitesMap;
+
+                this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished', suite: loadedTests.rootNode });
             }
         } catch (err) {
-            console.log(`crashhhheeeddd`);
-            console.log(`err: ${err}`);
+            console.log(`load error: ${err}`);
         }
-
     }
 
-    public async run(tests: string[]): Promise<void> {
-        this.log.info(`Running example tests ${JSON.stringify(tests)}`);
-        this.testStatesEmitter.fire(<TestRunStartedEvent>{ type: 'started', tests });
-        let testNodeIds = tests;
-        if (tests.length === 1 && tests[0] === 'root') {
-            testNodeIds = this.loadedTests.children.map(s => s.id);
-        }
+    private extractTestNodeIds(searchNodeIds: string[], testNodeIds: string[]) {
+        searchNodeIds.forEach(nodeId => {
+            if (this.loadedTestSuites.has(nodeId)) {
+                const testSuite = this.loadedTestSuites.get(nodeId);
+                const childrenIds = testSuite.children.map(c => c.id);
+                return this.extractTestNodeIds(childrenIds, testNodeIds);
+            } else {
+                return testNodeIds.push(nodeId);
+            }
+        });
+    }
+
+    public async run(nodeIds: string[]): Promise<void> {
+        this.log.info(`Running example tests ${JSON.stringify(nodeIds)}`);
+        this.testStatesEmitter.fire(<TestRunStartedEvent>{ type: 'started', tests: nodeIds });
+        const testNodeIds: string[] = [];
+        this.extractTestNodeIds(nodeIds, testNodeIds);
         const testResults = await runTests(testNodeIds, this.workspaceRootDirectoryPath);
         testResults.forEach(tr => {
             this.testStatesEmitter.fire(<TestEvent>tr);

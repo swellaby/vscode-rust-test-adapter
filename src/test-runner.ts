@@ -69,6 +69,7 @@ const runTestsForNode = async (nodeId: string, workspaceRootDir: string) => new 
             packageName = nodeId.substring(0, packageDelimiterIndex);
             testFilter = nodeId.substring(packageDelimiterIndex + 2);
         }
+        console.log(`for package: ${packageName}, using filter: ${testFilter}`);
         const output = await runCargoTestCommand(packageName, workspaceRootDir, testFilter);
         resolve(parseTestOutput(packageName, output));
     } catch (err) {

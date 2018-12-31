@@ -76,7 +76,7 @@ const createTestInfoNode = (id: string, label: string): TestInfo => {
 };
 
 // tslint:disable
-const parseOutput = (packageName: string, output: string): TestSuiteInfo[] => {
+const parseOutput = (packageName: string, output: string, testSuiteMap: Map<string, TestSuiteInfo>): TestSuiteInfo[] => {
     const testsOutput = output.split('\n\n')[0];
     const testLines = testsOutput.split('\n');
     const testModulesMap: Map<string, TestSuiteInfo> = new Map<string, TestSuiteInfo>();
@@ -86,10 +86,12 @@ const parseOutput = (packageName: string, output: string): TestSuiteInfo[] => {
         const testName = modulePathParts.pop();
         const rootTestModuleName = modulePathParts.shift();
         let testId = `${packageName}::${trimmedModulePathParts}`;
-        let rootTestModule = testModulesMap.get(rootTestModuleName);
+        const suiteId = `${packageName}::${rootTestModuleName}`;
+        let rootTestModule = testModulesMap.get(suiteId);
         if (!rootTestModule) {
-            rootTestModule = createEmptyTestSuiteInfoNode(`${packageName}::${rootTestModuleName}`, rootTestModuleName);
-            testModulesMap.set(rootTestModuleName, rootTestModule);
+            rootTestModule = createEmptyTestSuiteInfoNode(suiteId, rootTestModuleName);
+            testModulesMap.set(suiteId, rootTestModule);
+            testSuiteMap.set(suiteId, rootTestModule);
         }
 
         let testModuleNode = rootTestModule;
@@ -99,6 +101,7 @@ const parseOutput = (packageName: string, output: string): TestSuiteInfo[] => {
             let childModuleNode = <TestSuiteInfo>testModuleNode.children.find(n => n.id === nodeId);
             if (!childModuleNode) {
                 childModuleNode = createEmptyTestSuiteInfoNode(nodeId, part);
+                testSuiteMap.set(nodeId, childModuleNode);
                 testModuleNode.children.push(childModuleNode);
             }
             testModuleNode = childModuleNode;
@@ -123,26 +126,31 @@ const buildRootTestSuiteInfoNode = (packageTestNodes: TestSuiteInfo[]): TestSuit
     return testSuite;
 };
 
-export const loadUnitTests = async (workspaceRoot: string): Promise<TestSuiteInfo> => {
+export const loadUnitTests = async (workspaceRoot: string): Promise<{ rootNode: TestSuiteInfo, testSuitesMap: Map<string, TestSuiteInfo> }> => {
     try {
+        const testSuitesMap = new Map<string, TestSuiteInfo>();
         const packages = await getPackages(workspaceRoot);
         const packageTests = await Promise.all(packages.map(async p => {
             const output = await loadPackageTests(p.packageRootDirectoryPath);
             if (output.indexOf('0 tests,') === 0) {
                 return undefined;
             }
-            return <TestSuiteInfo>{
+            const suite = <TestSuiteInfo>{
                 id: p.name,
                 type: 'suite',
                 label: p.name,
-                children: parseOutput(p.name, output)
+                children: parseOutput(p.name, output, testSuitesMap)
             };
+            testSuitesMap.set(p.name, suite);
+            return suite;
         }));
         // This condition will evaluate to true when there are no unit tests.
         if (packageTests.length >= 1 && !packageTests[0]) {
             return Promise.resolve(null);
         }
-        return Promise.resolve(buildRootTestSuiteInfoNode(packageTests));
+        const rootNode = buildRootTestSuiteInfoNode(packageTests);
+        testSuitesMap.set(rootNode.id, rootNode);
+        return Promise.resolve({ rootNode, testSuitesMap } );
     } catch (err) {
         return Promise.reject(err);
     }
