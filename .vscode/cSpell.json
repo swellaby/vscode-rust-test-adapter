@@ -2,22 +2,21 @@
     "version": "0.1",
     "language": "en",
     "words": [
-      "autorun",
-      "hbenl",
-      "opensource",
-      "posttest",
-      "preeslint",
-      "pretest",
-      "pretranspile",
-      "sonarqube",
-      "swellaby",
-      "testresults",
-      "toml",
-      "tslib",
-      "vsce",
-      "vsix"
+        "autorun",
+        "hbenl",
+        "opensource",
+        "posttest",
+        "preeslint",
+        "pretest",
+        "pretranspile",
+        "Roadmap",
+        "sonarqube",
+        "swellaby",
+        "testresults",
+        "toml",
+        "tslib",
+        "vsce",
+        "vsix"
     ],
-    "flagWords": [
-
-    ]
+    "flagWords": []
 }

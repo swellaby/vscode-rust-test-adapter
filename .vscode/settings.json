@@ -20,7 +20,8 @@
     ".vscode",
     ".gitignore",
     ".editorconfig",
-    ".vscodeignore"
+    ".vscodeignore",
+    "**/mocha-reporter-config.json"
   ],
   "cSpell.enabledLanguageIds": [
       "asciidoc",
@@ -45,5 +46,8 @@
     "node",
     "npm",
     "softwareTerms"
+  ],
+  "cSpell.words": [
+    "Roadmap"
   ]
 }
