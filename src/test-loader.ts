@@ -57,36 +57,55 @@ const getPackages = async (cargoManifestRootDirectory: string): Promise<ICargoPa
     resolve(packages);
 });
 
+// tslint:disable
 const parseOutput = (packageName: string, output: string): TestSuiteInfo[] => {
     const testsOutput = output.split('\n\n')[0];
     const testLines = testsOutput.split('\n');
     const testModulesMap: Map<string, TestSuiteInfo> = new Map<string, TestSuiteInfo>();
     testLines.forEach(testLine => {
-        const line = testLine.split(': test')[0].split('::');
-        const rootTestModule = line[0];
-        const testName = line[1];
-        // for (let i = 0; i < line.length - 2; i++) {
-
-        // }
-        let moduleTestSuite = testModulesMap.get(rootTestModule);
-        if (!moduleTestSuite) {
-            moduleTestSuite = {
-                id: `${packageName}:${rootTestModule}`,
-                label: rootTestModule,
+        const trimmedModulePathParts = testLine.split(': test')[0];
+        const modulePathParts = trimmedModulePathParts.split('::');
+        const testName = modulePathParts.pop();
+        const rootTestModuleName = modulePathParts.shift();
+        let testId = `${packageName}:${trimmedModulePathParts.replace('::', ':')}`;
+        let rootTestModule = testModulesMap.get(rootTestModuleName);
+        if (!rootTestModule) {
+            rootTestModule = {
+                id: `${packageName}:${rootTestModuleName}`,
+                label: rootTestModuleName,
                 type: 'suite',
                 children: []
             };
-            testModulesMap.set(rootTestModule, moduleTestSuite);
+            testModulesMap.set(rootTestModuleName, rootTestModule);
         }
+
+        let testModuleNode = rootTestModule;
+        modulePathParts.forEach(part => {
+            const parentNodeId = testModuleNode.id;
+            const nodeId = `${parentNodeId}:${part}`;
+            let childModuleNode = <TestSuiteInfo>testModuleNode.children.find(n => n.id === nodeId);
+            if (!childModuleNode) {
+                childModuleNode = {
+                    id: `${nodeId}`,
+                    label: part,
+                    type: 'suite',
+                    children: []
+                }
+                testModuleNode.children.push(childModuleNode);
+            }
+            testModuleNode = childModuleNode;
+        });
+
         const test: TestInfo = {
-            id: `${packageName}:${rootTestModule}:${testName}`,
+            id: testId,
             label: testName,
             type: 'test'
         };
-        moduleTestSuite.children.push(test);
+        testModuleNode.children.push(test);
     });
     return Array.from(testModulesMap.values());
 };
+// tslint:enable
 
 const buildRootTestSuiteInfoNode = (packageTestNodes: TestSuiteInfo[]): TestSuiteInfo => {
     const testSuite: TestSuiteInfo = {
@@ -107,7 +126,6 @@ export const loadUnitTests = async (workspaceRoot: string): Promise<TestSuiteInf
         const packages = await getPackages(workspaceRoot);
         const packageTests = await Promise.all(packages.map(async p => {
             const output = await loadPackageTests(p.packageRootDirectoryPath);
-            console.log(`package: ${p.name}`);
             if (output.indexOf('0 tests,') === 0) {
                 return undefined;
             }

@@ -51,7 +51,7 @@ export class RustAdapter implements TestAdapter {
                 this.log.info('No unit tests found');
                 this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished' });
             } else {
-                console.log(`loaded: ${JSON.stringify(loadedTests)}`);
+                // console.log(`loaded: ${JSON.stringify(loadedTests)}`);
                 this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished', suite: loadedTests });
             }
         } catch (err) {
