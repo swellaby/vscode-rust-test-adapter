@@ -9,6 +9,7 @@
     "sourceMap": true,
     "removeComments": false,
     "noImplicitAny": false,
+    "resolveJsonModule": true
   },
   "include": [
     "src/**/*.ts",

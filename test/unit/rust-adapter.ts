@@ -18,6 +18,7 @@ suite('RustAdapter Tests:', () => {
 
     teardown(() => {
         Sinon.restore();
+        rustAdapter = null;
     });
 
     test('Should display correct initialization method', async () => {

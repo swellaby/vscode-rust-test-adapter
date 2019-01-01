@@ -2,12 +2,12 @@
   "name": "vscode-rust-test-adapter",
   "displayName": "Rust Test Explorer",
   "description": "View and run your Rust tests in the Sidebar of Visual Studio Code",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "license": "MIT",
   "preview": true,
   "private": true,
   "publisher": "Swellaby",
-  "icon": "images/icon.png",
+  "icon": "images/rust3.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/swellaby/vscode-rust-test-adapter.git"
@@ -71,7 +71,10 @@
   "keywords": [
     "test",
     "testing",
-    "rust"
+    "rust",
+    "rustlang",
+    "test adapter",
+    "test explorer"
   ],
   "main": "src/main.js",
   "dependencies": {
@@ -87,7 +90,7 @@
     "@types/chai": "^4.1.7",
     "@types/mocha": "^5.2.5",
     "@types/node": "^10.12.18",
-    "@types/sinon": "^7.0.2",
+    "@types/sinon": "^7.0.3",
     "chai": "^4.2.0",
     "eslint": "^5.11.1",
     "husky": "^1.3.1",
@@ -105,7 +108,7 @@
     "vscode": "^1.1.26"
   },
   "engines": {
-    "vscode": "^1.23.0"
+    "vscode": "^1.21.0"
   },
   "extensionDependencies": [
     "hbenl.vscode-test-explorer"
