@@ -11,6 +11,7 @@ suite('RustAdapter Tests:', () => {
     let rustAdapter: RustAdapter;
 
     setup(() => {
+        // eslint-disable-next-line no-unused-vars
         logStub = <Log>{ info: (message: string) => null };
         logInfoStub = Sinon.stub(logStub, 'info');
         rustAdapter = new RustAdapter('foo', logStub, null, null, null);

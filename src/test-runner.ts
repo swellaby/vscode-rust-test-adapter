@@ -12,7 +12,7 @@ const runCargoTestCommand = async(packageName: string, workspaceRootDir: string,
         testFilter
         ? `${testFilter} -- --exact`
         : '' }`;
-    childProcess.exec(command, execArgs, (err, stdout, stderr) => {
+    const foo = childProcess.exec(command, execArgs, (err, stdout, stderr) => {
         // If there are failed tests then stderr will be truthy so we want to return stdout.
         if (err && !stderr) {
             console.log('crash');
