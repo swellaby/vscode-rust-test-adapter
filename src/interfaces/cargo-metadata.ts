@@ -1,9 +1,13 @@
 'use strict';
 
-import { IPackage } from './package';
+import { ICargoPackage } from './cargo-package';
 
+/**
+ * Describes the metadata Cargo provides about a
+ * package or packages in a workspace.
+ */
 export interface ICargoMetadata {
-    packages: IPackage[];
+    packages: ICargoPackage[];
     workspace_members: string[];
     workspace_root: string;
 }

@@ -25,7 +25,7 @@
     }
   ],
   "bugs": {
-    "url": "https://github.com/swellaby/vscode-rust-test-adapter/issues/choose"
+    "url": "https://github.com/swellaby/vscode-rust-test-adapter/issues/new/choose"
   },
   "scripts": {
     "postinstall": "node ./node_modules/vscode/bin/install",
@@ -78,7 +78,6 @@
   ],
   "main": "src/main.js",
   "dependencies": {
-    "toml": "^2.3.3",
     "tslib": "^1.9.3",
     "vscode-test-adapter-api": "^1.1.0",
     "vscode-test-adapter-util": "^0.5.1"

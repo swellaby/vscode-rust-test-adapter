@@ -10,7 +10,7 @@ import {
     TestSuiteInfo
 } from 'vscode-test-adapter-api';
 import { Log } from 'vscode-test-adapter-util';
-import { loadUnitTests } from './test-loader.1';
+import { loadUnitTests } from './test-loader';
 import { IDisposable } from './interfaces/disposable';
 import { runTestCase } from './test-runner';
 

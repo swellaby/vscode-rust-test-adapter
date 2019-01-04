@@ -8,11 +8,10 @@ const runCargoTestCommand = async(packageName: string, workspaceRootDir: string,
         cwd: workspaceRootDir,
         maxBuffer: 200 * 1024
     };
-    const command = `cargo test --lib -p ${packageName} ${
-        testFilter
-        ? `${testFilter} -- --exact`
-        : '' }`;
-    const foo = childProcess.exec(command, execArgs, (err, stdout, stderr) => {
+    // update this to receive the package, and conditionally use the lib or bin flag
+    // depending on the package target type
+    const command = `cargo test -p ${packageName} ${testFilter} -- --exact`;
+    childProcess.exec(command, execArgs, (err, stdout, stderr) => {
         // If there are failed tests then stderr will be truthy so we want to return stdout.
         if (err && !stderr) {
             console.log('crash');

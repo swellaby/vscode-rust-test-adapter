@@ -1,6 +1,12 @@
 'use strict';
 
+import { ICargoPackageTarget } from './cargo-package-target';
+
+/**
+ * Describes a Cargo package.
+ */
 export interface ICargoPackage {
-    packageRootDirectoryPath: string;
     name: string;
+    targets: ICargoPackageTarget[];
+    manifest_path: string;
 }
