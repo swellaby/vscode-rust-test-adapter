@@ -12,14 +12,17 @@ import {
 import { Log } from 'vscode-test-adapter-util';
 import { loadUnitTests } from './test-loader';
 import { IDisposable } from './interfaces/disposable';
-import { runTestCase } from './test-runner';
+import { runTestCase, runTestSuite } from './test-runner';
+import { ITestSuiteNode } from './interfaces/test-suite-node';
+import { ITestCaseNode } from './interfaces/test-case-node';
 
 /**
- *
+ * Implementation of the TestAdapter interface for Rust Tests.
  */
 export class RustAdapter implements TestAdapter {
     private disposables: IDisposable[] = [];
-    private loadedTestSuites: Map<string, TestSuiteInfo> = new Map<string, TestSuiteInfo>();
+    private testSuites: Map<string, ITestSuiteNode> = new Map<string, ITestSuiteNode>();
+    private testCases: Map<string, ITestCaseNode> = new Map<string, ITestCaseNode>();
 
     get tests() { return this.testsEmitter.event; }
     get testStates() { return this.testStatesEmitter.event; }
@@ -52,35 +55,41 @@ export class RustAdapter implements TestAdapter {
                 this.log.info('No unit tests found');
                 this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished' });
             } else {
-                this.loadedTestSuites = loadedTests.testSuitesMap;
-                this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished', suite: loadedTests.rootNode });
+                this.testCases = loadedTests.testCasesMap;
+                this.testSuites = loadedTests.testSuitesMap;
+                this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished', suite: loadedTests.rootTestSuite });
             }
         } catch (err) {
             console.log(`load error: ${err}`);
         }
     }
 
-    private extractTestCaseIdsFromNodes(searchNodeIds: string[], testNodeIds: string[]) {
-        searchNodeIds.forEach(nodeId => {
-            if (this.loadedTestSuites.has(nodeId)) {
-                const testSuite = this.loadedTestSuites.get(nodeId);
-                const childrenIds = testSuite.children.map(c => c.id);
-                return this.extractTestCaseIdsFromNodes(childrenIds, testNodeIds);
-            } else {
-                return testNodeIds.push(nodeId);
-            }
-        });
-    }
-
+    // tslint:disable-next-line
     public async run(nodeIds: string[]): Promise<void> {
         this.log.info('Running Rust Tests');
         this.testStatesEmitter.fire(<TestRunStartedEvent>{ type: 'started', tests: nodeIds });
-        const testCaseIds: string[] = [];
-        this.extractTestCaseIdsFromNodes(nodeIds, testCaseIds);
-        await Promise.all(testCaseIds.map(async id => {
-            const result = await runTestCase(id, this.workspaceRootDirectoryPath);
+        const nodeId = nodeIds[0];
+        if (this.testCases.has(nodeId)) {
+            const testCase = this.testCases.get(nodeId);
+            const result = await runTestCase(testCase, this.workspaceRootDirectoryPath);
             this.testStatesEmitter.fire(<TestEvent>result);
-        }));
+        } else {
+            const testSuite = this.testSuites.get(nodeId);
+            const packageSuites: ITestSuiteNode[] = [];
+            if (testSuite.id === 'root') {
+                testSuite.children.forEach(c => {
+                    packageSuites.push(this.testSuites.get(c.id));
+                });
+            } else {
+                packageSuites.push(testSuite);
+            }
+            await Promise.all(packageSuites.map(async packageSuite => {
+                const results = await runTestSuite(packageSuite, this.workspaceRootDirectoryPath);
+                results.forEach(result => {
+                    this.testStatesEmitter.fire(<TestEvent>result);
+                });
+            }));
+        }
         this.testStatesEmitter.fire(<TestRunFinishedEvent>{ type: 'finished' });
     }
 
@@ -102,5 +111,7 @@ export class RustAdapter implements TestAdapter {
             disposable.dispose();
         }
         this.disposables = [];
+        this.testCases = null;
+        this.testSuites = null;
     }
 }
