@@ -1,10 +1,11 @@
 'use strict';
 
 import { ICargoPackage } from './cargo-package';
-import { TestInfo } from 'vscode-test-adapter-api';
-import { TestCategory } from '../enums/test-category';
+// import { TestInfo } from 'vscode-test-adapter-api';
+import { NodeCategory } from '../enums/node-category';
 
-export interface ITestCaseNode extends TestInfo {
+export interface ITestCaseNode {
+    id: string;
     associatedPackage: ICargoPackage;
-    category: TestCategory;
+    // category: NodeCategory;
 }

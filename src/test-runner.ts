@@ -98,6 +98,7 @@ export const runTestSuite = async (testSuiteNode: ITestSuiteNode, workspaceRootD
             testFilter = `${testSuiteNodeId.slice(packageName.length + 2)}::`;
         }
 
+        // TODO: Need to leverage the new node properties to cover all package targets.
         if (associatedPackage.targets[0].kind[0] === 'lib') {
             testFilter += ' --lib ';
         } else {
@@ -106,7 +107,7 @@ export const runTestSuite = async (testSuiteNode: ITestSuiteNode, workspaceRootD
         const output = await runCargoTestCommand(packageName, workspaceRootDir, testFilter);
         resolve(parseTestCaseResultOutput(packageName, output));
     } catch (err) {
-        console.log(`Test Case Run Error: ${err}`);
+        console.log(`Test Suite Run Error: ${err}`);
         reject(err);
     }
 });

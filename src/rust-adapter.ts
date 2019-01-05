@@ -6,7 +6,9 @@ import {
     TestLoadStartedEvent,
     TestLoadFinishedEvent,
     TestRunStartedEvent,
-    TestRunFinishedEvent
+    TestRunFinishedEvent,
+    TestSuiteInfo,
+    TestSuiteEvent
 } from 'vscode-test-adapter-api';
 import { Log } from 'vscode-test-adapter-util';
 import { loadUnitTests } from './test-loader';
@@ -67,8 +69,8 @@ export class RustAdapter implements TestAdapter {
     private extractPackageTestSuitesFromNodes(nodeId: string, packageSuites: ITestSuiteNode[]) {
         const node = this.testSuites.get(nodeId);
         if (node.isStructuralNode) {
-            node.children.forEach(c => {
-                return this.extractPackageTestSuitesFromNodes(c.id, packageSuites);
+            node.childrenNodeIds.forEach(id => {
+                return this.extractPackageTestSuitesFromNodes(id, packageSuites);
             });
         } else {
             return packageSuites.push(node);
@@ -77,16 +79,8 @@ export class RustAdapter implements TestAdapter {
 
     private async runTestSuite(nodeId: string): Promise<void> {
         const packageSuites: ITestSuiteNode[] = [];
-        // const testSuite = this.testSuites.get(nodeId);
         this.extractPackageTestSuitesFromNodes(nodeId, packageSuites);
 
-        // if (testSuite.id === 'root') {
-        //     testSuite.children.forEach(c => {
-        //         packageSuites.push(this.testSuites.get(c.id));
-        //     });
-        // } else {
-        //     packageSuites.push(testSuite);
-        // }
         await Promise.all(packageSuites.map(async packageSuite => {
             const results = await runTestSuite(packageSuite, this.workspaceRootDirectoryPath);
             results.forEach(result => {
@@ -99,14 +93,15 @@ export class RustAdapter implements TestAdapter {
         this.log.info('Running Rust Tests');
         this.testStatesEmitter.fire(<TestRunStartedEvent>{ type: 'started', tests: nodeIds });
 
-        const nodeId = nodeIds[0];
-        if (this.testCases.has(nodeId)) {
-            const testCase = this.testCases.get(nodeId);
-            const result = await runTestCase(testCase, this.workspaceRootDirectoryPath);
-            this.testStatesEmitter.fire(<TestEvent>result);
-        } else {
-            await this.runTestSuite(nodeId);
-        }
+        await Promise.all(nodeIds.map(async nodeId => {
+            if (this.testCases.has(nodeId)) {
+                const testCase = this.testCases.get(nodeId);
+                const result = await runTestCase(testCase, this.workspaceRootDirectoryPath);
+                this.testStatesEmitter.fire(<TestEvent>result);
+            } else {
+                await this.runTestSuite(nodeId);
+            }
+        }));
 
         this.testStatesEmitter.fire(<TestRunFinishedEvent>{ type: 'finished' });
     }

@@ -1,12 +1,20 @@
 'use strict';
 
 import { ICargoPackage } from './cargo-package';
-import { TestSuiteInfo } from 'vscode-test-adapter-api';
-import { TestCategory } from '../enums/test-category';
+// import { TestSuiteInfo } from 'vscode-test-adapter-api';
+import { NodeCategory } from '../enums/node-category';
+// import { TargetType } from '../enums/target-type';
 
-export interface ITestSuiteNode extends TestSuiteInfo {
-    isPackageNode: boolean;
+export interface ITestSuiteNode {
+    id: string;
+    childrenNodeIds: string[];
     isStructuralNode: boolean;
     associatedPackage: ICargoPackage;
-    category: TestCategory;
+    testCategory: NodeCategory;
+    packageHasMultipleTargets: boolean;
+    packageHasBinTargets: boolean;
+    binNames: string[];
+    packageHasLibTarget: boolean;
+    libName: string;
+    testTargetNames: string[];
 }

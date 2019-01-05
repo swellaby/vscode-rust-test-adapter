@@ -8,6 +8,12 @@ module.exports = {
             rules: {
                 quotes: [ 'off' ]
             }
+        },
+        {
+            files: [ 'src/enums/**/*.js' ],
+            rules: {
+                'no-unused-vars': [ 'off' ]
+            }
         }
     ]
 };
