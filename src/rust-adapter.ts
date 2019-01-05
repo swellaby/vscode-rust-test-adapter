@@ -6,8 +6,7 @@ import {
     TestLoadStartedEvent,
     TestLoadFinishedEvent,
     TestRunStartedEvent,
-    TestRunFinishedEvent,
-    TestSuiteInfo
+    TestRunFinishedEvent
 } from 'vscode-test-adapter-api';
 import { Log } from 'vscode-test-adapter-util';
 import { loadUnitTests } from './test-loader';
@@ -21,8 +20,8 @@ import { ITestCaseNode } from './interfaces/test-case-node';
  */
 export class RustAdapter implements TestAdapter {
     private disposables: IDisposable[] = [];
-    private testSuites: Map<string, ITestSuiteNode> = new Map<string, ITestSuiteNode>();
-    private testCases: Map<string, ITestCaseNode> = new Map<string, ITestCaseNode>();
+    private testSuites: Map<string, ITestSuiteNode>;
+    private testCases: Map<string, ITestCaseNode>;
 
     get tests() { return this.testsEmitter.event; }
     get testStates() { return this.testStatesEmitter.event; }
@@ -37,7 +36,8 @@ export class RustAdapter implements TestAdapter {
         private readonly autorunEmitter
     ) {
         this.log.info('Initializing Rust adapter');
-
+        this.testSuites = new Map<string, ITestSuiteNode>();
+        this.testCases = new Map<string, ITestCaseNode>();
         this.disposables.push(this.testsEmitter);
         this.disposables.push(this.testStatesEmitter);
         this.disposables.push(this.autorunEmitter);
@@ -64,32 +64,50 @@ export class RustAdapter implements TestAdapter {
         }
     }
 
-    // tslint:disable-next-line
+    private extractPackageTestSuitesFromNodes(nodeId: string, packageSuites: ITestSuiteNode[]) {
+        const node = this.testSuites.get(nodeId);
+        if (node.isStructuralNode) {
+            node.children.forEach(c => {
+                return this.extractPackageTestSuitesFromNodes(c.id, packageSuites);
+            });
+        } else {
+            return packageSuites.push(node);
+        }
+    }
+
+    private async runTestSuite(nodeId: string): Promise<void> {
+        const packageSuites: ITestSuiteNode[] = [];
+        // const testSuite = this.testSuites.get(nodeId);
+        this.extractPackageTestSuitesFromNodes(nodeId, packageSuites);
+
+        // if (testSuite.id === 'root') {
+        //     testSuite.children.forEach(c => {
+        //         packageSuites.push(this.testSuites.get(c.id));
+        //     });
+        // } else {
+        //     packageSuites.push(testSuite);
+        // }
+        await Promise.all(packageSuites.map(async packageSuite => {
+            const results = await runTestSuite(packageSuite, this.workspaceRootDirectoryPath);
+            results.forEach(result => {
+                this.testStatesEmitter.fire(<TestEvent>result);
+            });
+        }));
+    }
+
     public async run(nodeIds: string[]): Promise<void> {
         this.log.info('Running Rust Tests');
         this.testStatesEmitter.fire(<TestRunStartedEvent>{ type: 'started', tests: nodeIds });
+
         const nodeId = nodeIds[0];
         if (this.testCases.has(nodeId)) {
             const testCase = this.testCases.get(nodeId);
             const result = await runTestCase(testCase, this.workspaceRootDirectoryPath);
             this.testStatesEmitter.fire(<TestEvent>result);
         } else {
-            const testSuite = this.testSuites.get(nodeId);
-            const packageSuites: ITestSuiteNode[] = [];
-            if (testSuite.id === 'root') {
-                testSuite.children.forEach(c => {
-                    packageSuites.push(this.testSuites.get(c.id));
-                });
-            } else {
-                packageSuites.push(testSuite);
-            }
-            await Promise.all(packageSuites.map(async packageSuite => {
-                const results = await runTestSuite(packageSuite, this.workspaceRootDirectoryPath);
-                results.forEach(result => {
-                    this.testStatesEmitter.fire(<TestEvent>result);
-                });
-            }));
+            await this.runTestSuite(nodeId);
         }
+
         this.testStatesEmitter.fire(<TestRunFinishedEvent>{ type: 'finished' });
     }
 
@@ -111,7 +129,7 @@ export class RustAdapter implements TestAdapter {
             disposable.dispose();
         }
         this.disposables = [];
-        this.testCases = null;
-        this.testSuites = null;
+        this.testCases.clear();
+        this.testSuites.clear();
     }
 }

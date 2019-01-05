@@ -4,7 +4,6 @@ import * as childProcess from 'child_process';
 
 import { ICargoMetadata } from './interfaces/cargo-metadata';
 import { ILoadedTestsResult } from './interfaces/loaded-tests-result';
-import { TestSuiteInfo } from 'vscode-test-adapter-api';
 import { Log } from 'vscode-test-adapter-util';
 import { ICargoPackage } from './interfaces/cargo-package';
 import { parseCargoTestListOutput } from './parsers/unit-parser';
@@ -44,7 +43,7 @@ const loadPackageUnitTestTree = async (cargoPackage: ICargoPackage, log: Log) =>
 const getCargoMetadata = async (workspaceDir: string, log: Log) => new Promise<ICargoMetadata>((resolve, reject) => {
     const execArgs: childProcess.ExecOptions = {
         cwd: workspaceDir,
-        maxBuffer: 400 * 1024
+        maxBuffer: 200 * 1024
     };
     const cmd = 'cargo metadata --no-deps --format-version 1';
     childProcess.exec(cmd, execArgs, (err, stdout) => {
@@ -69,7 +68,8 @@ const buildRootTestSuiteInfoNode = (packageTestNodes: ILoadedTestsResult[]): ITe
         return nodes;
     // tslint:disable-next-line:align
     }, [])];
-    const rootTestSuiteNode = createEmptyTestSuiteNode('root', 'rust', null);
+
+    const rootTestSuiteNode = createEmptyTestSuiteNode('root', 'rust', null, true);
     rootTestSuiteNode.children = testSuiteNodes.length === 1
         ? testSuiteNodes[0].children
         : testSuiteNodes;
