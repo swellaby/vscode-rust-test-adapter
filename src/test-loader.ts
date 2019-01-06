@@ -6,13 +6,14 @@ import { ICargoMetadata } from './interfaces/cargo-metadata';
 import { ILoadedTestsResult } from './interfaces/loaded-tests-result';
 import { Log } from 'vscode-test-adapter-util';
 import { ICargoPackage } from './interfaces/cargo-package';
-import { parseCargoTestListOutputs } from './parsers/unit-parser';
+import { parseCargoTestListResults } from './parsers/unit-parser';
 import { createEmptyTestSuiteNode, createTestSuiteInfo } from './utils';
 import { ITestSuiteNode } from './interfaces/test-suite-node';
 import { ITestCaseNode } from './interfaces/test-case-node';
 import { TargetType } from './enums/target-type';
 import { NodeCategory } from './enums/node-category';
 import { TestSuiteInfo } from 'vscode-test-adapter-api';
+import { ICargoTestListResult } from './interfaces/cargo-test-list-result';
 
 const runCargoTestCommand = async (testArgs: string, workspaceDir: string, log: Log) => new Promise<string>((resolve, reject) => {
     const execArgs: childProcess.ExecOptions = {
@@ -35,19 +36,21 @@ const loadPackageUnitTestTree = async (cargoPackage: ICargoPackage, log: Log) =>
     const packageRootDirectory = manifestPath.endsWith('Cargo.toml') ? manifestPath.slice(0, -10) : manifestPath;
 
     try {
-        const cargoOutputResults = await Promise.all(cargoPackage.targets.map(async target => {
+        const cargoTestListResults = await Promise.all(cargoPackage.targets.map(async target => {
             let cargoTestArgs = `-p ${packageName}`;
-            const targetKind = target.kind[0];
+            const targetKind = TargetType[target.kind[0]];
+            const targetName = target.name;
             if (targetKind === TargetType.bin) {
-                cargoTestArgs += ` --bin ${target.name}`;
+                cargoTestArgs += ` --bin ${targetName}`;
             } else if (targetKind === TargetType.lib) {
                 cargoTestArgs += ' --lib';
             } else {
                 return undefined;
             }
-            return await runCargoTestCommand(cargoTestArgs, packageRootDirectory, log);
+            const output = await runCargoTestCommand(cargoTestArgs, packageRootDirectory, log);
+            return <ICargoTestListResult>{ output, nodeTarget: { targetType: targetKind, targetName } };
         }));
-        resolve(parseCargoTestListOutputs(cargoPackage, cargoOutputResults));
+        resolve(parseCargoTestListResults(cargoPackage, cargoTestListResults));
     } catch (err) {
         reject(err);
     }
@@ -56,7 +59,7 @@ const loadPackageUnitTestTree = async (cargoPackage: ICargoPackage, log: Log) =>
 const getCargoMetadata = async (workspaceDir: string, log: Log) => new Promise<ICargoMetadata>((resolve, reject) => {
     const execArgs: childProcess.ExecOptions = {
         cwd: workspaceDir,
-        maxBuffer: 200 * 1024
+        maxBuffer: 300 * 1024
     };
     const cmd = 'cargo metadata --no-deps --format-version 1';
     childProcess.exec(cmd, execArgs, (err, stdout) => {
@@ -82,7 +85,7 @@ const buildRootTestSuiteInfoNode = (packageTestNodes: ILoadedTestsResult[], test
     });
 
     const rootNodeId = 'root';
-    const rootTestSuiteNode = createEmptyTestSuiteNode(rootNodeId, 'rust', null, true, NodeCategory.structural);
+    const rootTestSuiteNode = createEmptyTestSuiteNode(rootNodeId, null, true, NodeCategory.structural);
     const rootTestInfo = createTestSuiteInfo(rootNodeId, 'rust');
     rootTestInfo.children = testSuiteNodes.length === 1
         ? testSuiteNodes[0].children

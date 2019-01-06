@@ -2,8 +2,11 @@
 
 import * as childProcess from 'child_process';
 import { TestEvent } from 'vscode-test-adapter-api';
+
 import { ITestCaseNode } from './interfaces/test-case-node';
 import { ITestSuiteNode } from './interfaces/test-suite-node';
+import { TargetType } from './enums/target-type';
+import { INodeTarget } from './interfaces/node-target';
 
 const runCargoTestCommand = async(packageName: string, workspaceRootDir: string, testFilter: string) => new Promise<string>((resolve, reject) => {
     const execArgs: childProcess.ExecOptions = {
@@ -25,11 +28,12 @@ const runCargoTestCommand = async(packageName: string, workspaceRootDir: string,
     });
 });
 
-const parseTestResult = (packageName: string, testOutputLine: string): TestEvent => {
+const parseTestResult = (testIdPrefix: string, testOutputLine: string): TestEvent => {
     const testLine = testOutputLine.substr(5).split(' ... ');
     const testName = testLine[0];
     const testResult = testLine[1].toLowerCase();
     let state;
+    // TODO: should this be startsWith to account for test warnings?
     if (testResult === 'ok') {
         state = 'passed';
     } else if (testResult === 'failed') {
@@ -37,14 +41,15 @@ const parseTestResult = (packageName: string, testOutputLine: string): TestEvent
     } else {
         state = 'skipped';
     }
+    // TODO: figure out how to get failed test output here for message
     return {
         state,
-        test: `${packageName}::${testName}`,
+        test: `${testIdPrefix}::${testName}`,
         type: 'test'
     };
 };
 
-const parseTestCaseResultOutput = (packageName: string, output: string): TestEvent[] => {
+const parseTestCaseResultOutput = (testIdPrefix: string, output: string): TestEvent[] => {
     const testResults: TestEvent[] = [];
     const startMessageIndex = output.search(/running \d* (test|tests)/);
     if (startMessageIndex > 0) {
@@ -54,7 +59,7 @@ const parseTestCaseResultOutput = (packageName: string, output: string): TestEve
             const testResultsOutput = output.substring(startMessageEndIndex + 1).split('\n\n')[0];
             const testResultLines = testResultsOutput.split('\n');
             testResultLines.forEach(testResultLine => {
-                testResults.push(parseTestResult(packageName, testResultLine));
+                testResults.push(parseTestResult(testIdPrefix, testResultLine));
             });
         }
     }
@@ -62,25 +67,25 @@ const parseTestCaseResultOutput = (packageName: string, output: string): TestEve
     return testResults;
 };
 
+const buildTargetFilter = (nodeTarget: INodeTarget): string => {
+    if (nodeTarget.targetType === TargetType.lib) {
+        return ' --lib ';
+    } else if (nodeTarget.targetType === TargetType.bin) {
+        return ` --bin ${nodeTarget.targetName} `;
+    } else {
+        return ` --test ${nodeTarget.targetName} `;
+    }
+};
+
 export const runTestCase = async (testCaseNode: ITestCaseNode, workspaceRootDir: string) => new Promise<TestEvent>(async (resolve, reject) => {
     try {
-        const associatedPackage = testCaseNode.associatedPackage;
-        let packageName = associatedPackage.name;
-        const testCaseNodeId = testCaseNode.id;
-        let testFilter;
-        const packageDelimiterIndex = testCaseNodeId.indexOf('::');
-        if (packageDelimiterIndex > 0) {
-            packageName = testCaseNodeId.substring(0, packageDelimiterIndex);
-            testFilter = testCaseNodeId.substring(packageDelimiterIndex + 2);
-        }
-        if (associatedPackage.targets[0].kind[0] === 'lib') {
-            testFilter += ' --lib ';
-        } else {
-            testFilter += ` --bin ${packageName} `;
-        }
-        testFilter += '-- --exact';
+        const packageName = testCaseNode.packageName;
+        const target = buildTargetFilter(testCaseNode.nodeTarget);
+        const specName = testCaseNode.testSpecName;
+        const testFilter = `${target} ${specName} -- --exact`;
         const output = await runCargoTestCommand(packageName, workspaceRootDir, testFilter);
-        resolve(parseTestCaseResultOutput(packageName, output)[0]);
+        const testIdPrefix = `${packageName}::${testCaseNode.nodeTarget.targetName}`;
+        resolve(parseTestCaseResultOutput(testIdPrefix, output)[0]);
     } catch (err) {
         console.log(`Test Case Run Error: ${err}`);
         reject(err);
@@ -89,23 +94,18 @@ export const runTestCase = async (testCaseNode: ITestCaseNode, workspaceRootDir:
 
 export const runTestSuite = async (testSuiteNode: ITestSuiteNode, workspaceRootDir: string) => new Promise<TestEvent[]>(async (resolve, reject) => {
     try {
-        const associatedPackage = testSuiteNode.associatedPackage;
-        const packageName = associatedPackage.name;
-        const testSuiteNodeId = testSuiteNode.id;
-        let testFilter = testSuiteNodeId;
+        const packageName = testSuiteNode.packageName;
+        const specName = testSuiteNode.testSpecName;
 
-        if (testSuiteNodeId.startsWith(packageName)) {
-            testFilter = `${testSuiteNodeId.slice(packageName.length + 2)}::`;
-        }
+        const results = await Promise.all(testSuiteNode.targets.map(async target => {
+            const targetFilter = buildTargetFilter(target);
+            const testFilter = `${targetFilter} ${specName}`;
+            const testIdPrefix = `${packageName}::${target.targetName}`;
+            const output = await runCargoTestCommand(packageName, workspaceRootDir, testFilter);
+            return parseTestCaseResultOutput(testIdPrefix, output);
+        }));
 
-        // TODO: Need to leverage the new node properties to cover all package targets.
-        if (associatedPackage.targets[0].kind[0] === 'lib') {
-            testFilter += ' --lib ';
-        } else {
-            testFilter += ` --bin ${packageName} `;
-        }
-        const output = await runCargoTestCommand(packageName, workspaceRootDir, testFilter);
-        resolve(parseTestCaseResultOutput(packageName, output));
+        resolve([].concat(...results));
     } catch (err) {
         console.log(`Test Suite Run Error: ${err}`);
         reject(err);

@@ -6,9 +6,7 @@ import {
     TestLoadStartedEvent,
     TestLoadFinishedEvent,
     TestRunStartedEvent,
-    TestRunFinishedEvent,
-    TestSuiteInfo,
-    TestSuiteEvent
+    TestRunFinishedEvent
 } from 'vscode-test-adapter-api';
 import { Log } from 'vscode-test-adapter-util';
 import { loadUnitTests } from './test-loader';
@@ -63,6 +61,7 @@ export class RustAdapter implements TestAdapter {
             }
         } catch (err) {
             console.log(`load error: ${err}`);
+            this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished' });
         }
     }
 
@@ -93,15 +92,19 @@ export class RustAdapter implements TestAdapter {
         this.log.info('Running Rust Tests');
         this.testStatesEmitter.fire(<TestRunStartedEvent>{ type: 'started', tests: nodeIds });
 
-        await Promise.all(nodeIds.map(async nodeId => {
-            if (this.testCases.has(nodeId)) {
-                const testCase = this.testCases.get(nodeId);
-                const result = await runTestCase(testCase, this.workspaceRootDirectoryPath);
-                this.testStatesEmitter.fire(<TestEvent>result);
-            } else {
-                await this.runTestSuite(nodeId);
-            }
-        }));
+        try {
+            await Promise.all(nodeIds.map(async nodeId => {
+                if (this.testCases.has(nodeId)) {
+                    const testCase = this.testCases.get(nodeId);
+                    const result = await runTestCase(testCase, this.workspaceRootDirectoryPath);
+                    this.testStatesEmitter.fire(<TestEvent>result);
+                } else {
+                    await this.runTestSuite(nodeId);
+                }
+            }));
+        } catch (err) {
+            console.log(`Run err ${err}`);
+        }
 
         this.testStatesEmitter.fire(<TestRunFinishedEvent>{ type: 'finished' });
     }
