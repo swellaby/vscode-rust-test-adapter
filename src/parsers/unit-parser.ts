@@ -16,7 +16,8 @@ const updateTestTree = (
     modulePathParts: string[],
     testModulesMap: Map<string, ITestSuiteNode>,
     associatedPackage: ICargoPackage,
-    nodeTarget: INodeTarget
+    nodeTarget: INodeTarget,
+    testIdPrefix: string
 ) => {
     let currentNode = packageRootNode;
     let testSpecName = '';
@@ -27,7 +28,7 @@ const updateTestTree = (
         let suiteNode = testModulesMap.get(currentNodeId);
         let suiteInfo: TestSuiteInfo = <TestSuiteInfo>currentNode.children.find(c => c.id === currentNodeId);
         if (!suiteNode) {
-            suiteNode = createEmptyTestSuiteNode(currentNodeId, associatedPackage, false, NodeCategory.unit, testSpecName);
+            suiteNode = createEmptyTestSuiteNode(currentNodeId, associatedPackage, false, NodeCategory.unit, testSpecName, testIdPrefix);
             suiteNode.targets.push(nodeTarget);
             suiteInfo = createTestSuiteInfo(currentNodeId, part);
             testModulesMap.set(currentNodeId, suiteNode);
@@ -41,15 +42,15 @@ const updateTestTree = (
 };
 
 const initializeTestNode = (
-    packageName: string,
     trimmedModulePathParts: string,
     testName: string,
+    nodeIdPrefix: string,
     cargoPackage: ICargoPackage,
     testCasesMap: Map<string, ITestCaseNode>,
     nodeTarget: INodeTarget
 ) => {
-    const testNodeId = `${packageName}::${trimmedModulePathParts}`;
-    const testNode = createTestCaseNode(testNodeId, cargoPackage.name, nodeTarget, trimmedModulePathParts);
+    const testNodeId = `${nodeIdPrefix}::${trimmedModulePathParts}`;
+    const testNode = createTestCaseNode(testNodeId, cargoPackage.name, nodeTarget, trimmedModulePathParts, nodeIdPrefix);
     const testInfo = createTestInfo(testNodeId, testName);
     testCasesMap.set(testNodeId, testNode);
     return testInfo;
@@ -57,7 +58,7 @@ const initializeTestNode = (
 
 const parseCargoTestListOutput = (
     cargoTestListResult: ICargoTestListResult,
-    packageName: string,
+    nodeIdPrefix: string,
     cargoPackage: ICargoPackage,
     testCasesMap: Map<string, ITestCaseNode>,
     packageSuiteInfo: TestSuiteInfo,
@@ -68,8 +69,8 @@ const parseCargoTestListOutput = (
         const trimmedModulePathParts = testLine.split(': test')[0];
         const modulePathParts = trimmedModulePathParts.split('::');
         const testName = modulePathParts.pop();
-        const testNode = initializeTestNode(packageName, trimmedModulePathParts, testName, cargoPackage, testCasesMap, cargoTestListResult.nodeTarget);
-        updateTestTree(testNode, packageSuiteInfo, modulePathParts, testSuitesMap, cargoPackage, cargoTestListResult.nodeTarget);
+        const testNode = initializeTestNode(trimmedModulePathParts, testName, nodeIdPrefix, cargoPackage, testCasesMap, cargoTestListResult.nodeTarget);
+        updateTestTree(testNode, packageSuiteInfo, modulePathParts, testSuitesMap, cargoPackage, cargoTestListResult.nodeTarget, nodeIdPrefix);
     });
 };
 
@@ -84,7 +85,8 @@ const parseCargoTestListResult = (
 ) => {
     const target = cargoTestListResult.nodeTarget;
     const targetName = target.targetName;
-    const targetNodeId = `${packageName}::${targetName}`;
+    const targetType = target.targetType;
+    const targetNodeId = `${packageName}::${targetName}::${targetType}`;
     const targetRootNode = createEmptyTestSuiteNode(targetNodeId, cargoPackage);
     packageRootNode.childrenNodeIds.push(targetNodeId);
     packageRootNode.targets.push(target);

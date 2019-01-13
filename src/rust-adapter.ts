@@ -79,12 +79,9 @@ export class RustAdapter implements TestAdapter {
     private async runTestSuite(nodeId: string): Promise<void> {
         const packageSuites: ITestSuiteNode[] = [];
         this.extractPackageTestSuitesFromNodes(nodeId, packageSuites);
-
         await Promise.all(packageSuites.map(async packageSuite => {
             const results = await runTestSuite(packageSuite, this.workspaceRootDirectoryPath);
-            results.forEach(result => {
-                this.testStatesEmitter.fire(<TestEvent>result);
-            });
+            results.forEach(result => this.testStatesEmitter.fire(<TestEvent>result));
         }));
     }
 

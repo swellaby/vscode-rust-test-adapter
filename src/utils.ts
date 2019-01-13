@@ -13,7 +13,8 @@ export const createEmptyTestSuiteNode = (
     cargoPackage: ICargoPackage,
     isStructuralNode: boolean = false,
     testCategory: NodeCategory = NodeCategory.unit,
-    testSpecName: string = ''
+    testSpecName: string = '',
+    testIdPrefix: string = ''
 ): ITestSuiteNode => {
     const packageName = cargoPackage ? cargoPackage.name : undefined;
     return <ITestSuiteNode>{
@@ -23,16 +24,18 @@ export const createEmptyTestSuiteNode = (
         packageName,
         isStructuralNode,
         category: testCategory,
-        targets: []
+        targets: [],
+        testIdPrefix
     };
 };
 
-export const createTestCaseNode = (id: string, packageName: string, nodeTarget: INodeTarget, testSpecName: string = ''): ITestCaseNode => {
+export const createTestCaseNode = (id: string, packageName: string, nodeTarget: INodeTarget, testSpecName: string = '', nodeIdPrefix: string): ITestCaseNode => {
     return <ITestCaseNode>{
         id,
         packageName,
         nodeTarget,
-        testSpecName
+        testSpecName,
+        nodeIdPrefix
     };
 };
 

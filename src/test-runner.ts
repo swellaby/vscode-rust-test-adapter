@@ -84,8 +84,7 @@ export const runTestCase = async (testCaseNode: ITestCaseNode, workspaceRootDir:
         const specName = testCaseNode.testSpecName;
         const testFilter = `${target} ${specName} -- --exact`;
         const output = await runCargoTestCommand(packageName, workspaceRootDir, testFilter);
-        const testIdPrefix = `${packageName}::${testCaseNode.nodeTarget.targetName}`;
-        resolve(parseTestCaseResultOutput(testIdPrefix, output)[0]);
+        resolve(parseTestCaseResultOutput(testCaseNode.nodeIdPrefix, output)[0]);
     } catch (err) {
         console.log(`Test Case Run Error: ${err}`);
         reject(err);
@@ -100,7 +99,7 @@ export const runTestSuite = async (testSuiteNode: ITestSuiteNode, workspaceRootD
         const results = await Promise.all(testSuiteNode.targets.map(async target => {
             const targetFilter = buildTargetFilter(target);
             const testFilter = `${targetFilter} ${specName}`;
-            const testIdPrefix = `${packageName}::${target.targetName}`;
+            const testIdPrefix = `${packageName}::${target.targetName}::${target.targetType}`;
             const output = await runCargoTestCommand(packageName, workspaceRootDir, testFilter);
             return parseTestCaseResultOutput(testIdPrefix, output);
         }));
