@@ -4,9 +4,9 @@ module.exports = {
     extends: '@swellaby/eslint-config/lib/bundles/ts-node',
     overrides: [
         {
-            files: [ 'generators/**/*.js' ],
+            files: [ 'src/enums/**/*.js' ],
             rules: {
-                quotes: [ 'off' ]
+                'no-unused-vars': [ 'off' ]
             }
         }
     ]

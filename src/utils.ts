@@ -2,7 +2,44 @@
 
 import { TestInfo, TestSuiteInfo } from 'vscode-test-adapter-api';
 
-export const createEmptyTestSuiteInfoNode = (id: string, label: string): TestSuiteInfo => {
+import { ICargoPackage } from './interfaces/cargo-package';
+import { ITestCaseNode } from './interfaces/test-case-node';
+import { ITestSuiteNode } from './interfaces/test-suite-node';
+import { NodeCategory } from './enums/node-category';
+import { INodeTarget } from './interfaces/node-target';
+
+export const createEmptyTestSuiteNode = (
+    id: string,
+    cargoPackage: ICargoPackage,
+    isStructuralNode: boolean = false,
+    testCategory: NodeCategory = NodeCategory.unit,
+    testSpecName: string = '',
+    testIdPrefix: string = ''
+): ITestSuiteNode => {
+    const packageName = cargoPackage ? cargoPackage.name : undefined;
+    return <ITestSuiteNode>{
+        id,
+        testSpecName,
+        childrenNodeIds: [],
+        packageName,
+        isStructuralNode,
+        category: testCategory,
+        targets: [],
+        testIdPrefix
+    };
+};
+
+export const createTestCaseNode = (id: string, packageName: string, nodeTarget: INodeTarget, testSpecName: string = '', nodeIdPrefix: string): ITestCaseNode => {
+    return <ITestCaseNode>{
+        id,
+        packageName,
+        nodeTarget,
+        testSpecName,
+        nodeIdPrefix
+    };
+};
+
+export const createTestSuiteInfo = (id: string, label: string): TestSuiteInfo => {
     return {
         id,
         label,
@@ -11,7 +48,7 @@ export const createEmptyTestSuiteInfoNode = (id: string, label: string): TestSui
     };
 };
 
-export const createTestInfoNode = (id: string, label: string): TestInfo => {
+export const createTestInfo = (id: string, label: string): TestInfo => {
     return {
         id,
         label,

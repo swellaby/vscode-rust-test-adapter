@@ -4,11 +4,16 @@ import * as childProcess from 'child_process';
 
 import { ICargoMetadata } from './interfaces/cargo-metadata';
 import { ILoadedTestsResult } from './interfaces/loaded-tests-result';
-import { TestSuiteInfo } from 'vscode-test-adapter-api';
 import { Log } from 'vscode-test-adapter-util';
 import { ICargoPackage } from './interfaces/cargo-package';
-import { parseCargoTestListOutput } from './parsers/unit-parser';
-import { createEmptyTestSuiteInfoNode } from './utils';
+import { parseCargoTestListResults } from './parsers/unit-parser';
+import { createEmptyTestSuiteNode, createTestSuiteInfo } from './utils';
+import { ITestSuiteNode } from './interfaces/test-suite-node';
+import { ITestCaseNode } from './interfaces/test-case-node';
+import { TargetType } from './enums/target-type';
+import { NodeCategory } from './enums/node-category';
+import { TestSuiteInfo } from 'vscode-test-adapter-api';
+import { ICargoTestListResult } from './interfaces/cargo-test-list-result';
 
 const runCargoTestCommand = async (testArgs: string, workspaceDir: string, log: Log) => new Promise<string>((resolve, reject) => {
     const execArgs: childProcess.ExecOptions = {
@@ -28,12 +33,24 @@ const runCargoTestCommand = async (testArgs: string, workspaceDir: string, log: 
 const loadPackageUnitTestTree = async (cargoPackage: ICargoPackage, log: Log) => new Promise<ILoadedTestsResult>(async (resolve, reject) => {
     const manifestPath = cargoPackage.manifest_path;
     const packageName = cargoPackage.name;
-    const cargoTestArgs = `-p ${packageName}`;
     const packageRootDirectory = manifestPath.endsWith('Cargo.toml') ? manifestPath.slice(0, -10) : manifestPath;
 
     try {
-        const cargoOutput = await runCargoTestCommand(cargoTestArgs, packageRootDirectory, log);
-        return resolve(parseCargoTestListOutput(packageName, cargoOutput));
+        const cargoTestListResults = await Promise.all(cargoPackage.targets.map(async target => {
+            let cargoTestArgs = `-p ${packageName}`;
+            const targetKind = TargetType[target.kind[0]];
+            const targetName = target.name;
+            if (targetKind === TargetType.bin) {
+                cargoTestArgs += ` --bin ${targetName}`;
+            } else if (targetKind === TargetType.lib) {
+                cargoTestArgs += ' --lib';
+            } else {
+                return undefined;
+            }
+            const output = await runCargoTestCommand(cargoTestArgs, packageRootDirectory, log);
+            return <ICargoTestListResult>{ output, nodeTarget: { targetType: targetKind, targetName } };
+        }));
+        resolve(parseCargoTestListResults(cargoPackage, cargoTestListResults));
     } catch (err) {
         reject(err);
     }
@@ -42,7 +59,7 @@ const loadPackageUnitTestTree = async (cargoPackage: ICargoPackage, log: Log) =>
 const getCargoMetadata = async (workspaceDir: string, log: Log) => new Promise<ICargoMetadata>((resolve, reject) => {
     const execArgs: childProcess.ExecOptions = {
         cwd: workspaceDir,
-        maxBuffer: 400 * 1024
+        maxBuffer: 300 * 1024
     };
     const cmd = 'cargo metadata --no-deps --format-version 1';
     childProcess.exec(cmd, execArgs, (err, stdout) => {
@@ -59,41 +76,46 @@ const getCargoMetadata = async (workspaceDir: string, log: Log) => new Promise<I
     });
 });
 
-const buildRootTestSuiteInfoNode = (packageTestNodes: ILoadedTestsResult[]): TestSuiteInfo => {
-    const testSuiteNodes = packageTestNodes.reduce((nodes, n) => {
-        if (n.rootTestSuite) {
-            nodes.push(n.rootTestSuite);
+const buildRootTestSuiteInfoNode = (packageTestNodes: ILoadedTestsResult[], testSuitesMap: Map<string, ITestSuiteNode>): TestSuiteInfo => {
+    const testSuiteNodes: TestSuiteInfo[] = [];
+    packageTestNodes.forEach(packageTestNode => {
+        if (packageTestNode && packageTestNode.rootTestSuite) {
+            testSuiteNodes.push(packageTestNode.rootTestSuite);
         }
-        return nodes;
-    // tslint:disable-next-line:align
-    }, []);
-    const rootTestSuiteNode = createEmptyTestSuiteInfoNode('root', 'rust');
-    rootTestSuiteNode.children = testSuiteNodes.length === 1
-        ? testSuiteNodes[0].children
-        : testSuiteNodes;
+    });
 
-    return rootTestSuiteNode;
+    const rootNodeId = 'root';
+    const rootTestSuiteNode = createEmptyTestSuiteNode(rootNodeId, null, true, NodeCategory.structural);
+    const rootTestInfo = createTestSuiteInfo(rootNodeId, 'rust');
+    rootTestInfo.children = testSuiteNodes.length === 1
+        ? testSuiteNodes[0].children
+        : rootTestInfo.children = testSuiteNodes;
+
+    rootTestSuiteNode.childrenNodeIds = rootTestInfo.children.map(c => c.id);
+    testSuitesMap.set(rootNodeId, rootTestSuiteNode);
+    return rootTestInfo;
 };
 
-export const loadUnitTests = async (workspaceRoot: string, log: Log): Promise<{ rootNode: TestSuiteInfo, testSuitesMap: Map<string, TestSuiteInfo> }> => {
+export const loadUnitTests = async (workspaceRoot: string, log: Log): Promise<ILoadedTestsResult> => {
     try {
-        let testSuitesMap = new Map<string, TestSuiteInfo>();
+        let testSuitesMap = new Map<string, ITestSuiteNode>();
+        let testCasesMap = new Map<string, ITestCaseNode>();
         const packages = (await getCargoMetadata(workspaceRoot, log)).packages;
         const packageTests = await Promise.all(packages.map(async p => {
             const packageTestResult = await loadPackageUnitTestTree(p, log);
             if (!packageTestResult) {
                 return undefined;
             }
-            testSuitesMap = new Map([...testSuitesMap, ...packageTestResult.testModulesMap]);
+            testSuitesMap = new Map([...testSuitesMap, ...packageTestResult.testSuitesMap]);
+            testCasesMap = new Map([...testCasesMap, ...packageTestResult.testCasesMap]);
             return packageTestResult;
         }));
         // This condition will evaluate to true when there are no unit tests.
         if (packageTests.length >= 1 && !packageTests[0]) {
             return Promise.resolve(null);
         }
-        const rootNode = buildRootTestSuiteInfoNode(packageTests);
-        testSuitesMap.set(rootNode.id, rootNode);
-        return Promise.resolve({ rootNode, testSuitesMap } );
+        const rootNode = buildRootTestSuiteInfoNode(packageTests, testSuitesMap);
+        return Promise.resolve({ rootTestSuite: rootNode, testSuitesMap, testCasesMap });
     } catch (err) {
         return Promise.reject(err);
     }
