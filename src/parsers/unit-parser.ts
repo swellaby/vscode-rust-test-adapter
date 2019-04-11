@@ -16,8 +16,7 @@ const updateTestTree = (
     modulePathParts: string[],
     testModulesMap: Map<string, ITestSuiteNode>,
     associatedPackage: ICargoPackage,
-    nodeTarget: INodeTarget,
-    testIdPrefix: string
+    nodeTarget: INodeTarget
 ) => {
     let currentNode = packageRootNode;
     let testSpecName = '';
@@ -28,7 +27,7 @@ const updateTestTree = (
         let suiteNode = testModulesMap.get(currentNodeId);
         let suiteInfo: TestSuiteInfo = <TestSuiteInfo>currentNode.children.find(c => c.id === currentNodeId);
         if (!suiteNode) {
-            suiteNode = createEmptyTestSuiteNode(currentNodeId, associatedPackage, false, NodeCategory.unit, testSpecName, testIdPrefix);
+            suiteNode = createEmptyTestSuiteNode(currentNodeId, associatedPackage, false, NodeCategory.unit, testSpecName);
             suiteNode.targets.push(nodeTarget);
             suiteInfo = createTestSuiteInfo(currentNodeId, part);
             testModulesMap.set(currentNodeId, suiteNode);
@@ -70,7 +69,7 @@ const parseCargoTestListOutput = (
         const modulePathParts = trimmedModulePathParts.split('::');
         const testName = modulePathParts.pop();
         const testNode = initializeTestNode(trimmedModulePathParts, testName, nodeIdPrefix, cargoPackage, testCasesMap, cargoTestListResult.nodeTarget);
-        updateTestTree(testNode, packageSuiteInfo, modulePathParts, testSuitesMap, cargoPackage, cargoTestListResult.nodeTarget, nodeIdPrefix);
+        updateTestTree(testNode, packageSuiteInfo, modulePathParts, testSuitesMap, cargoPackage, cargoTestListResult.nodeTarget);
     });
 };
 

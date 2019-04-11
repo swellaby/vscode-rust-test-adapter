@@ -13,8 +13,7 @@ export const createEmptyTestSuiteNode = (
     cargoPackage: ICargoPackage,
     isStructuralNode: boolean = false,
     testCategory: NodeCategory = NodeCategory.unit,
-    testSpecName: string = '',
-    testIdPrefix: string = ''
+    testSpecName: string = ''
 ): ITestSuiteNode => {
     const packageName = cargoPackage ? cargoPackage.name : undefined;
     return <ITestSuiteNode>{
@@ -24,8 +23,7 @@ export const createEmptyTestSuiteNode = (
         packageName,
         isStructuralNode,
         category: testCategory,
-        targets: [],
-        testIdPrefix
+        targets: []
     };
 };
 
