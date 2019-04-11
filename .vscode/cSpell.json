@@ -1,23 +1,25 @@
 {
-    "version": "0.1",
-    "language": "en",
-    "words": [
-        "autorun",
-        "hbenl",
-        "opensource",
-        "posttest",
-        "preeslint",
-        "pretest",
-        "pretranspile",
-        "Roadmap",
-        "sonarqube",
-        "swellaby",
-        "testresults",
-        "toml",
-        "truthy",
-        "tslib",
-        "vsce",
-        "vsix"
-    ],
-    "flagWords": []
+  "version": "0.1",
+  "language": "en",
+  "words": [
+    "autorun",
+    "hbenl",
+    "mocharc",
+    "opensource",
+    "posttest",
+    "preeslint",
+    "pretest",
+    "pretranspile",
+    "roadmap",
+    "rustlang",
+    "sonarqube",
+    "swellaby",
+    "testresults",
+    "toml",
+    "truthy",
+    "tslib",
+    "vsce",
+    "vsix"
+  ],
+  "flagWords": []
 }
