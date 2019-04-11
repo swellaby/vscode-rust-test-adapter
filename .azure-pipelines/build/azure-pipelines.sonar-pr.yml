@@ -1,0 +1,43 @@
+trigger: none
+
+pr:
+- master
+
+pool:
+  vmImage: 'Ubuntu-16.04'
+
+resources:
+  repositories:
+  - repository: templates
+    type: github
+    name: swellaby/azure-pipelines-templates
+    endpoint: swellaby
+
+steps:
+- template: templates/yml/node/combo/npm-build-validation-xunit-cobertura.yml@templates
+  parameters:
+    publishTestResults:
+      taskDisplayName: 'Publish unit test results'
+      testResultsFormat: 'JUnit'
+      testResultsFiles: 'xunit.xml'
+      searchFolder: '$(Build.SourcesDirectory)/.testresults/unit'
+      testRunTitle: 'vscode-rust-test-adapter::Unit Tests::Linux PR - Build $(Build.BuildId)'
+
+- script: |
+    export PACKAGE_VERSION=$(node -e "console.log(require('./package.json').version);")
+    echo "##vso[task.setVariable variable=packageVersion]$PACKAGE_VERSION"
+
+- task: SonarSource.sonarCloud.14d9cde6-c1da-4d55-aa01-2965cd301255.SonarCloudPrepare@1
+  displayName: 'Prepare analysis on SonarCloud'
+  inputs:
+    SonarCloud: 'SonarCloud Swellaby'
+    organization: swellaby
+    scannerMode: CLI
+    extraProperties: |
+      sonar.projectVersion=$(packageVersion)
+
+- task: SonarSource.sonarCloud.ce096e50-6155-4de8-8800-4221aaeed4a1.SonarCloudAnalyze@1
+  displayName: 'Run code analysis'
+
+- task: SonarSource.sonarCloud.38b27399-a642-40af-bb7d-9971f69712e8.SonarCloudPublish@1
+  displayName: 'Publish quality gate result'

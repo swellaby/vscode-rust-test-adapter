@@ -3,6 +3,8 @@
   "language": "en",
   "words": [
     "autorun",
+    "cobertura",
+    "codecov",
     "hbenl",
     "mocharc",
     "opensource",
@@ -19,7 +21,8 @@
     "truthy",
     "tslib",
     "vsce",
-    "vsix"
+    "vsix",
+    "xunit"
   ],
   "flagWords": []
 }
