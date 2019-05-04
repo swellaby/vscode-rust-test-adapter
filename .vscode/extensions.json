@@ -1,11 +1,11 @@
 {
-    "recommendations": [
-        "swellaby.common-pack",
-        "eg2.tslint",
-        "dbaeumer.vscode-eslint",
-        "christian-kohler.path-intellisense",
-        "christian-kohler.npm-intellisense",
-        "pflannery.vscode-versionlens",
-        "hbenl.vscode-mocha-test-adapter"
-    ]
+  "recommendations": [
+    "swellaby.common-pack",
+    "dbaeumer.vscode-eslint",
+    "christian-kohler.path-intellisense",
+    "christian-kohler.npm-intellisense",
+    "pflannery.vscode-versionlens",
+    "hbenl.vscode-mocha-test-adapter",
+    "ms-azure-devops.azure-pipelines"
+  ]
 }
