@@ -23,10 +23,6 @@ export class RustAdapter implements TestAdapter {
     private testSuites: Map<string, ITestSuiteNode>;
     private testCases: Map<string, ITestCaseNode>;
 
-    get tests() { return this.testsEmitter.event; }
-    get testStates() { return this.testStatesEmitter.event; }
-    get autorun() { return this.autorunEmitter.event; }
-
     // tslint:disable:typedef
     constructor(
         public readonly workspaceRootDirectoryPath: string,
@@ -43,6 +39,10 @@ export class RustAdapter implements TestAdapter {
         this.disposables.push(this.autorunEmitter);
     }
     // tslint:enable:typedef
+
+    public get tests() { return this.testsEmitter.event; }
+    public get testStates() { return this.testStatesEmitter.event; }
+    public get autorun() { return this.autorunEmitter.event; }
 
     public async load(): Promise<void> {
         this.log.info('Loading Rust Tests');
@@ -100,16 +100,15 @@ export class RustAdapter implements TestAdapter {
                 }
             }));
         } catch (err) {
+            this.log.error(`Run err ${err}`);
             console.log(`Run err ${err}`);
         }
 
         this.testStatesEmitter.fire(<TestRunFinishedEvent>{ type: 'finished' });
     }
 
-    // eslint-disable-next-line no-unused-vars
-    public async debug(tests: string[]): Promise<void> {
+    public async debug(_tests: string[]): Promise<void> {
         // in a "real" TestAdapter this would start a test run in a child process and attach the debugger to it
-        this.log.warn('debug() not implemented yet');
         throw new Error('Method not implemented.');
     }
 
