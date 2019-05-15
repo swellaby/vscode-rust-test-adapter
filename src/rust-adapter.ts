@@ -67,7 +67,7 @@ export class RustAdapter implements TestAdapter {
 
     private extractPackageTestSuitesFromNodes(nodeId: string, packageSuites: ITestSuiteNode[]) {
         const node = this.testSuites.get(nodeId);
-        if (node.isStructuralNode) {
+        if (node && node.isStructuralNode) {
             node.childrenNodeIds.forEach(id => {
                 return this.extractPackageTestSuitesFromNodes(id, packageSuites);
             });
@@ -90,6 +90,9 @@ export class RustAdapter implements TestAdapter {
         this.testStatesEmitter.fire(<TestRunStartedEvent>{ type: 'started', tests: nodeIds });
 
         try {
+            if (nodeIds.length === 1 && nodeIds[0] === 'root') {
+                nodeIds = this.testSuites.get('root').childrenNodeIds;
+            }
             await Promise.all(nodeIds.map(async nodeId => {
                 if (this.testCases.has(nodeId)) {
                     const testCase = this.testCases.get(nodeId);
