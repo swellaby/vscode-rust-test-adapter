@@ -73,5 +73,45 @@ suite('utils', () => {
                 testSpecName: ''
             });
         });
+
+        test('Should initialize the testSpecName with specified value', () => {
+            const node: ITestCaseNode = createTestCaseNode(id, packageName, nodeTarget, nodeIdPrefix, testSpecName);
+            assert.deepEqual(node, {
+                id,
+                packageName,
+                nodeIdPrefix,
+                nodeTarget,
+                testSpecName
+            });
+        });
+    });
+
+    suite('createTestSuiteInfo()', () => {
+        const id = 'rusty-hook';
+        const label = 'foo';
+
+        test('Should correctly initialize test suite info object', () => {
+            const node: TestSuiteInfo = createTestSuiteInfo(id, label);
+            assert.deepEqual(node, {
+                id,
+                label,
+                type: 'suite',
+                children: []
+            });
+        });
+    });
+
+    suite('createTestInfo()', () => {
+        const id = 'swanson';
+        const label = 'unit tests';
+
+        test('Should correctly initialize test case info object', () => {
+            const node: TestInfo = createTestInfo(id, label);
+            assert.deepEqual(node, {
+                id,
+                label,
+                type: 'test'
+            });
+        });
     });
 });
