@@ -27,7 +27,7 @@ export const createEmptyTestSuiteNode = (
     };
 };
 
-export const createTestCaseNode = (id: string, packageName: string, nodeTarget: INodeTarget, testSpecName: string = '', nodeIdPrefix: string): ITestCaseNode => {
+export const createTestCaseNode = (id: string, packageName: string, nodeTarget: INodeTarget, nodeIdPrefix: string, testSpecName: string = ''): ITestCaseNode => {
     return <ITestCaseNode>{
         id,
         packageName,

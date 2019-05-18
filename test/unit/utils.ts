@@ -19,7 +19,7 @@ suite('utils', () => {
     suite('createEmptyTestSuiteNode()', () => {
         test('Should create node with correct defaults when not optional values not set', () => {
             const id = 'rusty-hook::git';
-            const name = 'rusty-hook'
+            const name = 'rusty-hook';
             const cargoPackage = <ICargoPackage>{ name };
             const node: ITestSuiteNode = createEmptyTestSuiteNode(id, cargoPackage);
             assert.deepEqual(node.id, id);
@@ -64,13 +64,13 @@ suite('utils', () => {
         const testSpecName = 'bar';
 
         test('Should initialize the testSpecName with default empty string', () => {
-            const node: ITestCaseNode = createTestCaseNode(id, packageName, nodeTarget, testSpecName, nodeIdPrefix);
+            const node: ITestCaseNode = createTestCaseNode(id, packageName, nodeTarget, nodeIdPrefix);
             assert.deepEqual(node, {
                 id,
                 packageName,
                 nodeIdPrefix,
                 nodeTarget,
-                testSpecName
+                testSpecName: ''
             });
         });
     });

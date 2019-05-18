@@ -16,23 +16,23 @@ type TestLoadEvent = TestLoadStartedEvent | TestLoadFinishedEvent;
 const testsEmitterStub = {
     fire: (_event: TestLoadEvent) => null,
     dispose: () => null,
-    event: {},
+    event: {}
 };
 
 const testStatesEmitterStub = {
     fire: (_event: TestRunEvent) => null,
     dispose: () => null,
-    event: {},
+    event: {}
 };
 
 const autoRunEmitterStub = {
     dispose: () => null,
-    event: {},
+    event: {}
 };
 
 const logStub = <Log>{
     info: (_message: string) => null,
-    error: (_message: string) => null,
+    error: (_message: string) => null
 };
 
 export const rustAdapterParams = {
@@ -45,15 +45,15 @@ export const rustAdapterParams = {
 export const rustAdapterParamStubs = {
     log: {
         getInfoStub: () => Sinon.stub(logStub, 'info'),
-        getErrorStub: () => Sinon.stub(logStub, 'error'),
+        getErrorStub: () => Sinon.stub(logStub, 'error')
     },
     testsEmitterStubs: {
         getDisposeStub: () => Sinon.stub(testsEmitterStub, 'dispose'),
-        getFireStub: () => Sinon.stub(testsEmitterStub, 'fire'),
+        getFireStub: () => Sinon.stub(testsEmitterStub, 'fire')
     },
     testsStatesEmitterStubs: {
         getDisposeStub: () => Sinon.stub(testStatesEmitterStub, 'dispose'),
-        getFireStub: () => Sinon.stub(testStatesEmitterStub, 'fire'),
+        getFireStub: () => Sinon.stub(testStatesEmitterStub, 'fire')
     },
     autoRunEmitterStubs: {
         getDisposeStub: () => Sinon.stub(autoRunEmitterStub, 'dispose')

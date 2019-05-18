@@ -49,7 +49,7 @@ const initializeTestNode = (
     nodeTarget: INodeTarget
 ) => {
     const testNodeId = `${nodeIdPrefix}::${trimmedModulePathParts}`;
-    const testNode = createTestCaseNode(testNodeId, cargoPackage.name, nodeTarget, trimmedModulePathParts, nodeIdPrefix);
+    const testNode = createTestCaseNode(testNodeId, cargoPackage.name, nodeTarget, nodeIdPrefix, trimmedModulePathParts);
     const testInfo = createTestInfo(testNodeId, testName);
     testCasesMap.set(testNodeId, testNode);
     return testInfo;

@@ -15,7 +15,7 @@ suite('RustAdapter Tests:', () => {
             logStub: log,
             testsEmitterStub: testsEmitter,
             testStatesEmitterStub: testStatesEmitter,
-            autoRunEmitterStub: autoRunEmitter,
+            autoRunEmitterStub: autoRunEmitter
         } = rustAdapterParams;
         rustAdapter = new RustAdapter('foo', log, testsEmitter, testStatesEmitter, autoRunEmitter);
     });
@@ -52,7 +52,7 @@ suite('RustAdapter Tests:', () => {
     suite('debug()', () => {
         test('Should throw not implemented error', async () => {
             try {
-                await rustAdapter.debug([])
+                await rustAdapter.debug([]);
                 assert.fail('Should have thrown');
             } catch (err) {
                 assert.deepEqual(err.message, 'Method not implemented.');
