@@ -60,7 +60,7 @@ export class RustAdapter implements TestAdapter {
                 this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished', suite: loadedTests.rootTestSuite });
             }
         } catch (err) {
-            console.log(`load error: ${err}`);
+            this.log.error(`Error loading tests: ${err}`);
             this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished' });
         }
     }

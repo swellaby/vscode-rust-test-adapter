@@ -2,22 +2,41 @@
 
 import { assert } from 'chai';
 import * as Sinon from 'sinon';
+import {
+    TestLoadStartedEvent,
+    TestLoadFinishedEvent,
+    TestRunStartedEvent,
+    TestRunFinishedEvent
+} from 'vscode-test-adapter-api';
+
 import { RustAdapter } from '../../src/rust-adapter';
-import { rustAdapterParamStubs, rustAdapterParams } from '../utils';
+import * as testLoader from '../../src/test-loader';
+import {
+    rustAdapterParamStubs,
+    rustAdapterParams,
+    loadedTestsResultStub
+} from '../test-utils';
 
 suite('RustAdapter Tests:', () => {
     let logInfoStub: Sinon.SinonStub;
+    let logErrorStub: Sinon.SinonStub;
+    let testsEmitterFireStub: Sinon.SinonStub;
+    let loadUnitTestsStub: Sinon.SinonStub;
     let rustAdapter: RustAdapter;
+    const workspaceRootDirectoryPath = '/usr/me/rusty-hook';
 
     setup(() => {
         logInfoStub = rustAdapterParamStubs.log.getInfoStub();
+        logErrorStub = rustAdapterParamStubs.log.getErrorStub();
+        testsEmitterFireStub = Sinon.stub(rustAdapterParams.testsEmitterStub, 'fire');
         const {
             logStub: log,
             testsEmitterStub: testsEmitter,
             testStatesEmitterStub: testStatesEmitter,
             autoRunEmitterStub: autoRunEmitter
         } = rustAdapterParams;
-        rustAdapter = new RustAdapter('foo', log, testsEmitter, testStatesEmitter, autoRunEmitter);
+        loadUnitTestsStub = Sinon.stub(testLoader, 'loadUnitTests').withArgs(workspaceRootDirectoryPath, log);
+        rustAdapter = new RustAdapter(workspaceRootDirectoryPath, log, testsEmitter, testStatesEmitter, autoRunEmitter);
     });
 
     teardown(() => {
@@ -31,19 +50,47 @@ suite('RustAdapter Tests:', () => {
         });
     });
 
-    suite('get tests() ', () => {
+    suite('load()', () => {
+        test('Should gracefully handle exception thrown on load', async () => {
+            const err = new Error('crashed');
+            loadUnitTestsStub.throws(() => err);
+            await rustAdapter.load();
+            assert.isTrue(logInfoStub.calledWithExactly('Loading Rust Tests'));
+            assert.isTrue(testsEmitterFireStub.calledWithExactly(<TestLoadStartedEvent>{ type: 'started' }));
+            assert.isTrue(logErrorStub.calledWithExactly(`Error loading tests: ${err}`));
+            assert.isTrue(testsEmitterFireStub.calledWithExactly(<TestLoadFinishedEvent>{ type: 'finished' }));
+        });
+
+        test('Should correctly handle no tests found scenario', async () => {
+            loadUnitTestsStub.callsFake(() => undefined);
+            await rustAdapter.load();
+            assert.isTrue(logInfoStub.calledWithExactly('No unit tests found'));
+            assert.isTrue(testsEmitterFireStub.calledWithExactly(<TestLoadFinishedEvent>{ type: 'finished' }));
+        });
+
+        test('Should correctly handle tests loaded scenario', async () => {
+            loadUnitTestsStub.callsFake(() => loadedTestsResultStub);
+            await rustAdapter.load();
+            assert.isTrue(testsEmitterFireStub.calledWithExactly(<TestLoadFinishedEvent>{
+                type: 'finished',
+                suite: loadedTestsResultStub.rootTestSuite
+            }));
+        });
+    });
+
+    suite('get tests()', () => {
         test('Should have correct value', () => {
             assert.deepEqual(rustAdapter.tests, rustAdapterParams.testsEmitterStub.event);
         });
     });
 
-    suite('get testStates() ', () => {
+    suite('get testStates()', () => {
         test('Should have correct value', () => {
             assert.deepEqual(rustAdapter.testStates, rustAdapterParams.testStatesEmitterStub.event);
         });
     });
 
-    suite('get autorun() ', () => {
+    suite('get autorun()', () => {
         test('Should have correct value', () => {
             assert.deepEqual(rustAdapter.autorun, rustAdapterParams.autoRunEmitterStub.event);
         });
