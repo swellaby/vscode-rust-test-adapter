@@ -14,7 +14,7 @@ import * as testLoader from '../../src/test-loader';
 import {
     rustAdapterParamStubs,
     rustAdapterParams,
-    loadedTestsResultStub
+    treeNodes
 } from '../test-utils';
 
 suite('RustAdapter Tests:', () => {
@@ -24,6 +24,13 @@ suite('RustAdapter Tests:', () => {
     let loadUnitTestsStub: Sinon.SinonStub;
     let rustAdapter: RustAdapter;
     const workspaceRootDirectoryPath = '/usr/me/rusty-hook';
+    const {
+        loadedTestsResultStub,
+        testCases,
+        testCasesMapStub,
+        testSuites,
+        testSuitesMapStub
+    } = treeNodes
 
     setup(() => {
         logInfoStub = rustAdapterParamStubs.log.getInfoStub();

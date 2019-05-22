@@ -6,14 +6,17 @@ import {
     TestLoadStartedEvent,
     TestLoadFinishedEvent,
     TestRunStartedEvent,
-    TestRunFinishedEvent,
-    TestSuiteInfo
+    TestRunFinishedEvent
 } from 'vscode-test-adapter-api';
 import { Log } from 'vscode-test-adapter-util';
 
-import { ILoadedTestsResult } from '../src/interfaces/loaded-tests-result';
-import { ITestSuiteNode } from '../src/interfaces/test-suite-node';
-import { ITestCaseNode } from '../src/interfaces/test-case-node';
+import {
+    loadedTestsResultStub,
+    testCases,
+    testCasesMapStub,
+    testSuites,
+    testSuitesMapStub
+} from './data/tree-nodes';
 
 type TestRunEvent = TestRunStartedEvent | TestRunFinishedEvent | TestEvent;
 type TestLoadEvent = TestLoadStartedEvent | TestLoadFinishedEvent;
@@ -65,13 +68,10 @@ export const rustAdapterParamStubs = {
     }
 };
 
-export const testCasesMapStub: Map<string, ITestCaseNode> = new Map<string, ITestCaseNode>();
-export const testSuitesMapStub: Map<string, ITestSuiteNode> = new Map<string, ITestSuiteNode>();
-
-export const loadedTestsResultStub = <ILoadedTestsResult>{
-    rootTestSuite: <TestSuiteInfo>{
-
-    },
-    testCasesMap: testCasesMapStub,
-    testSuitesMap: testSuitesMapStub
+export const treeNodes = {
+    loadedTestsResultStub,
+    testCases,
+    testCasesMapStub,
+    testSuites,
+    testSuitesMapStub
 };
