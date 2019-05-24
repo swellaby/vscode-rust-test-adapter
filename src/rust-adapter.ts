@@ -103,20 +103,19 @@ export class RustAdapter implements TestAdapter {
                 }
             }));
         } catch (err) {
-            this.log.error(`Run err ${err}`);
-            console.log(`Run err ${err}`);
+            this.log.error(`Run error: ${err}`);
         }
 
         this.testStatesEmitter.fire(<TestRunFinishedEvent>{ type: 'finished' });
     }
 
     public async debug(_tests: string[]): Promise<void> {
-        // in a "real" TestAdapter this would start a test run in a child process and attach the debugger to it
+        // TODO: start a test run in a child process and attach the debugger to it
         throw new Error('Method not implemented.');
     }
 
     public cancel(): void {
-        // in a "real" TestAdapter this would kill the child process for the current test run (if there is any)
+        // TODO: kill the child process for the current test run (if there is any)
         throw new Error('Method not implemented.');
     }
 

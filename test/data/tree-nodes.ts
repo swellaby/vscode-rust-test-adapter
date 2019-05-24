@@ -4,58 +4,52 @@ import { TestSuiteInfo } from 'vscode-test-adapter-api';
 import { ILoadedTestsResult } from '../../src/interfaces/loaded-tests-result';
 import { ITestSuiteNode } from '../../src/interfaces/test-suite-node';
 import { ITestCaseNode } from '../../src/interfaces/test-case-node';
+import { INodeTarget } from '../../src/interfaces/node-target';
+import { TargetType } from '../../src/enums/target-type';
+
+const packageName = 'rust-test-sample';
+
+const binTarget: INodeTarget = {
+    targetType: TargetType.bin,
+    targetName: packageName
+};
 
 const testCase1 = <ITestCaseNode>{
     id: 'rust-test-sample::rust-test-sample::bin::fail',
-    packageName: 'rust-test-sample',
-    nodeTarget: {
-        targetType: 'bin',
-        targetName: 'rust-test-sample'
-    },
+    packageName,
+    nodeTarget: binTarget,
     testSpecName: 'fail',
     nodeIdPrefix: 'rust-test-sample::rust-test-sample::bin'
 };
 
 const testCase2 = <ITestCaseNode>{
     id: 'rust-test-sample::rust-test-sample::bin::foo::bar_second',
-    packageName: 'rust-test-sample',
-    nodeTarget: {
-        targetType: 'bin',
-        targetName: 'rust-test-sample'
-    },
+    packageName,
+    nodeTarget: binTarget,
     testSpecName: 'foo::bar_second',
     nodeIdPrefix: 'rust-test-sample::rust-test-sample::bin'
 };
 
 const testCase3 = <ITestCaseNode>{
     id: 'rust-test-sample::rust-test-sample::bin::foo::foo_tests::foo_works',
-    packageName: 'rust-test-sample',
-    nodeTarget: {
-        targetType: 'bin',
-        targetName: 'rust-test-sample'
-    },
+    packageName,
+    nodeTarget: binTarget,
     testSpecName: 'foo::foo_tests::foo_works',
     nodeIdPrefix: 'rust-test-sample::rust-test-sample::bin'
 };
 
 const testCase4 = <ITestCaseNode>{
     id: 'rust-test-sample::rust-test-sample::bin::pass',
-    packageName: 'rust-test-sample',
-    nodeTarget: {
-        targetType: 'bin',
-        targetName: 'rust-test-sample'
-    },
+    packageName,
+    nodeTarget: binTarget,
     testSpecName: 'pass',
     nodeIdPrefix: 'rust-test-sample::rust-test-sample::bin'
 };
 
 const testCase5 = <ITestCaseNode>{
     id: 'rust-test-sample::rust-test-sample::bin::tests::it_works',
-    packageName: 'rust-test-sample',
-    nodeTarget: {
-        targetType: 'bin',
-        targetName: 'rust-test-sample'
-    },
+    packageName,
+    nodeTarget: binTarget,
     testSpecName: 'tests::it_works',
     nodeIdPrefix: 'rust-test-sample::rust-test-sample::bin'
 };
@@ -82,75 +76,50 @@ const testSuite1 = <ITestSuiteNode>{
     childrenNodeIds: [
         'rust-test-sample::rust-test-sample::bin'
     ],
-    packageName: 'rust-test-sample',
+    packageName,
     isStructuralNode: false,
     category: 'unit',
-    targets: [
-        {
-            targetType: 'bin',
-            targetName: 'rust-test-sample'
-        }
-    ]
+    targets: [ binTarget ]
 };
 
 const testSuite2 = <ITestSuiteNode>{
     id: 'rust-test-sample::rust-test-sample::bin',
     testSpecName: '',
     childrenNodeIds: [],
-    packageName: 'rust-test-sample',
+    packageName,
     isStructuralNode: false,
     category: 'unit',
-    targets: [
-        {
-            targetType: 'bin',
-            targetName: 'rust-test-sample'
-        }
-    ]
+    targets: [ binTarget ]
 };
 
 const testSuite3 = <ITestSuiteNode>{
     id: 'rust-test-sample::rust-test-sample::bin::foo',
     testSpecName: 'foo::',
     childrenNodeIds: [],
-    packageName: 'rust-test-sample',
+    packageName,
     isStructuralNode: false,
     category: 'unit',
-    targets: [
-        {
-            targetType: 'bin',
-            targetName: 'rust-test-sample'
-        }
-    ]
+    targets: [ binTarget ]
 };
 
 const testSuite4 = <ITestSuiteNode>{
     id: 'rust-test-sample::rust-test-sample::bin::foo::foo_tests',
     testSpecName: 'foo::foo_tests::',
     childrenNodeIds: [],
-    packageName: 'rust-test-sample',
+    packageName,
     isStructuralNode: false,
     category: 'unit',
-    targets: [
-        {
-            targetType: 'bin',
-            targetName: 'rust-test-sample'
-        }
-    ]
+    targets: [ binTarget ]
 };
 
 const testSuite5 = <ITestSuiteNode>{
     id: 'rust-test-sample::rust-test-sample::bin::tests',
     testSpecName: 'tests::',
     childrenNodeIds: [],
-    packageName: 'rust-test-sample',
+    packageName,
     isStructuralNode: false,
     category: 'unit',
-    targets: [
-        {
-            targetType: 'bin',
-            targetName: 'rust-test-sample'
-        }
-    ]
+    targets: [ binTarget ]
 };
 
 const rootTestSuite = <ITestSuiteNode>{
