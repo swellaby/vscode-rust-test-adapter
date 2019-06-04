@@ -213,3 +213,37 @@ export const loadedTestsResultStub = <ILoadedTestsResult>{
     testCasesMap: testCasesMapStub,
     testSuitesMap: testSuitesMapStub
 };
+
+const unitTestSuiteInfo = <ITestSuiteNode>{
+    id: 'Unit Tests',
+    testSpecName: '',
+    childrenNodeIds: rootTestSuite.childrenNodeIds,
+    isStructuralNode: true,
+    category: 'structural',
+    targets: []
+}
+
+const structuralNodesRootTestSuite: ITestSuiteNode = JSON.parse(JSON.stringify(rootTestSuite));
+structuralNodesRootTestSuite.childrenNodeIds = [unitTestSuiteInfo.id];
+const structuralNodesSuitesMap = new Map(testSuitesMapStub);
+structuralNodesSuitesMap.set(unitTestSuiteInfo.id, unitTestSuiteInfo);
+structuralNodesSuitesMap.set(rootTestSuite.id, structuralNodesRootTestSuite);
+const structuralNodeRootTestSuiteInfo = <TestSuiteInfo>{
+    id: rootTestSuite.id,
+    label: 'rust',
+    type: 'suite',
+    children: [
+        {
+            id: unitTestSuiteInfo.id,
+            label: unitTestSuiteInfo.testSpecName,
+            type: 'suite',
+            children: JSON.parse(JSON.stringify(rootTestSuiteInfo.children))
+        }
+    ]
+};
+
+export const structuralNodesLoadedTestsResultStub = <ILoadedTestsResult>{
+    rootTestSuite: structuralNodeRootTestSuiteInfo,
+    testCasesMap: testCasesMapStub,
+    testSuitesMap: structuralNodesSuitesMap
+};
