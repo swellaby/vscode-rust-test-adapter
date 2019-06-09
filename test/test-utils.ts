@@ -12,6 +12,7 @@ import { Log } from 'vscode-test-adapter-util';
 
 import {
     loadedTestsResultStub,
+    structuralNodesLoadedTestsResultStub,
     testCases,
     testCasesMapStub,
     testSuites,
@@ -73,5 +74,6 @@ export const treeNodes = {
     testCases,
     testCasesMapStub,
     testSuites,
-    testSuitesMapStub
+    testSuitesMapStub,
+    structuralNodesLoadedTestsResultStub
 };

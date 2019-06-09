@@ -67,6 +67,7 @@ export class RustAdapter implements TestAdapter {
 
     private extractPackageTestSuitesFromNodes(nodeId: string, packageSuites: ITestSuiteNode[]) {
         const node = this.testSuites.get(nodeId);
+        console.log(`nodeId: ${nodeId}`)
         if (node && node.isStructuralNode) {
             node.childrenNodeIds.forEach(id => {
                 return this.extractPackageTestSuitesFromNodes(id, packageSuites);
@@ -103,6 +104,11 @@ export class RustAdapter implements TestAdapter {
                 }
             }));
         } catch (err) {
+            console.log('******************************');
+            console.log('******************************');
+            console.log('******************************');
+            console.log('******************************');
+            console.log('******************************');
             this.log.error(`Run error: ${err}`);
         }
 

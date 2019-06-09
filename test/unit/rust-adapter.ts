@@ -32,7 +32,8 @@ suite('RustAdapter Tests:', () => {
     const {
         loadedTestsResultStub,
         testCases,
-        testSuites
+        testSuites,
+        structuralNodesLoadedTestsResultStub
     } = treeNodes;
 
     setup(() => {
@@ -164,6 +165,26 @@ suite('RustAdapter Tests:', () => {
             assert.isTrue(testStatesEmitterFireStub.calledWithExactly(<TestRunFinishedEvent>{ type: 'finished' }));
             assert.isFalse(logErrorStub.called);
         });
+
+        // test('Should correctly handle tree-level run all with structural node', async () => {
+        //     loadUnitTestsStub.callsFake(() => Promise.resolve(structuralNodesLoadedTestsResultStub));
+        //     await rustAdapter.load();
+        //     const nodeIds = [ 'root' ];
+        //     setResultForTestCase(testCase1, testCase1Result);
+        //     setResultForTestCase(testCase4, testCase4Result);
+        //     setResultsForTestSuite(testSuite3, testSuite3Results);
+        //     setResultsForTestSuite(testSuite5, testSuite5Results);
+        //     await rustAdapter.run(nodeIds);
+        //     assert.isTrue(logInfoStub.calledWithExactly('Running Rust Tests'));
+        //     assert.isTrue(testStatesEmitterFireStub.calledWithExactly(<TestRunStartedEvent>{ type: 'started', tests: nodeIds }));
+        //     assert.isTrue(testStatesEmitterFireStub.calledWithExactly(<TestEvent>testCase1Result));
+        //     assert.isTrue(testStatesEmitterFireStub.calledWithExactly(<TestEvent>testCase4Result));
+        //     assert.isTrue(testStatesEmitterFireStub.calledWithExactly(<TestEvent>testCase2Result));
+        //     assert.isTrue(testStatesEmitterFireStub.calledWithExactly(<TestEvent>testCase3Result));
+        //     assert.isTrue(testStatesEmitterFireStub.calledWithExactly(<TestEvent>testCase5Result));
+        //     assert.isTrue(testStatesEmitterFireStub.calledWithExactly(<TestRunFinishedEvent>{ type: 'finished' }));
+        //     assert.isFalse(logErrorStub.called);
+        // });
     });
 
     suite('get tests()', () => {
