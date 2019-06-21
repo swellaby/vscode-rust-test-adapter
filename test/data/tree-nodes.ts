@@ -221,7 +221,7 @@ const unitTestSuiteInfo = <ITestSuiteNode>{
     isStructuralNode: true,
     category: 'structural',
     targets: []
-}
+};
 
 const structuralNodesRootTestSuite: ITestSuiteNode = JSON.parse(JSON.stringify(rootTestSuite));
 structuralNodesRootTestSuite.childrenNodeIds = [unitTestSuiteInfo.id];

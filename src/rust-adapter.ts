@@ -11,6 +11,7 @@ import {
 import { Log } from 'vscode-test-adapter-util';
 import { loadUnitTests } from './test-loader';
 import { IDisposable } from './interfaces/disposable';
+import { ITargetRunNodes } from './interfaces/target-run-nodes';
 import { runTestCase, runTestSuite } from './test-runner';
 import { ITestSuiteNode } from './interfaces/test-suite-node';
 import { ITestCaseNode } from './interfaces/test-case-node';
@@ -65,25 +66,44 @@ export class RustAdapter implements TestAdapter {
         }
     }
 
-    private extractPackageTestSuitesFromNodes(nodeId: string, packageSuites: ITestSuiteNode[]) {
-        const node = this.testSuites.get(nodeId);
-        console.log(`nodeId: ${nodeId}`)
-        if (node && node.isStructuralNode) {
-            node.childrenNodeIds.forEach(id => {
-                return this.extractPackageTestSuitesFromNodes(id, packageSuites);
-            });
+    private async runTestSuites(testSuites: ITestSuiteNode[]): Promise<void> {
+        await Promise.all(testSuites.map(async testSuite => {
+            const results = await runTestSuite(testSuite, this.workspaceRootDirectoryPath);
+            results.forEach(result => this.testStatesEmitter.fire(<TestEvent>result));
+        }));
+    }
+
+    private async runTestCases(testCases: ITestCaseNode[]): Promise<void> {
+        await Promise.all(testCases.map(async testCase => {
+            const result = await runTestCase(testCase, this.workspaceRootDirectoryPath);
+            this.testStatesEmitter.fire(<TestEvent>result);
+        }));
+    }
+
+    private extractTestTargetsFromNodes(nodeId: string, targetNodes: ITargetRunNodes) {
+        if (this.testSuites.has(nodeId)) {
+            const node = this.testSuites.get(nodeId);
+            if (node.isStructuralNode) {
+                node.childrenNodeIds.forEach(id => {
+                    return this.extractTestTargetsFromNodes(id, targetNodes);
+                });
+            } else {
+                targetNodes.testSuites.push(node);
+                return targetNodes;
+            }
         } else {
-            return packageSuites.push(node);
+            targetNodes.testCases.push(this.testCases.get(nodeId));
+            return targetNodes;
         }
     }
 
-    private async runTestSuite(nodeId: string): Promise<void> {
-        const packageSuites: ITestSuiteNode[] = [];
-        this.extractPackageTestSuitesFromNodes(nodeId, packageSuites);
-        await Promise.all(packageSuites.map(async packageSuite => {
-            const results = await runTestSuite(packageSuite, this.workspaceRootDirectoryPath);
-            results.forEach(result => this.testStatesEmitter.fire(<TestEvent>result));
-        }));
+    private async runTargetsForSuiteNode(nodeId: string): Promise<void> {
+        const targetNodes = <ITargetRunNodes>{ testCases: [], testSuites: [] };
+        this.extractTestTargetsFromNodes(nodeId, targetNodes);
+        await Promise.all([
+            await this.runTestSuites(targetNodes.testSuites),
+            await this.runTestCases(targetNodes.testCases)
+        ]);
     }
 
     public async run(nodeIds: string[]): Promise<void> {
@@ -91,24 +111,14 @@ export class RustAdapter implements TestAdapter {
         this.testStatesEmitter.fire(<TestRunStartedEvent>{ type: 'started', tests: nodeIds });
 
         try {
-            if (nodeIds.length === 1 && nodeIds[0] === 'root') {
-                nodeIds = this.testSuites.get('root').childrenNodeIds;
-            }
             await Promise.all(nodeIds.map(async nodeId => {
                 if (this.testCases.has(nodeId)) {
-                    const testCase = this.testCases.get(nodeId);
-                    const result = await runTestCase(testCase, this.workspaceRootDirectoryPath);
-                    this.testStatesEmitter.fire(<TestEvent>result);
+                    await this.runTestCases([ this.testCases.get(nodeId) ]);
                 } else {
-                    await this.runTestSuite(nodeId);
+                    await this.runTargetsForSuiteNode(nodeId);
                 }
             }));
         } catch (err) {
-            console.log('******************************');
-            console.log('******************************');
-            console.log('******************************');
-            console.log('******************************');
-            console.log('******************************');
             this.log.error(`Run error: ${err}`);
         }
 

@@ -53,6 +53,3 @@ export const createTestInfo = (id: string, label: string): TestInfo => {
         type: 'test'
     };
 };
-
-
-
