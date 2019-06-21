@@ -15,7 +15,7 @@ import { NodeCategory } from './enums/node-category';
 import { TestSuiteInfo } from 'vscode-test-adapter-api';
 import { ICargoTestListResult } from './interfaces/cargo-test-list-result';
 
-const runCargoTestCommand = async (testArgs: string, workspaceDir: string, log: Log) => new Promise<string>((resolve, reject) => {
+const runCargoTestCommand = async (testArgs: string, workspaceDir: string, _log: Log) => new Promise<string>((resolve, reject) => {
     const execArgs: childProcess.ExecOptions = {
         cwd: workspaceDir,
         maxBuffer: 400 * 1024

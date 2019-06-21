@@ -20,6 +20,8 @@ const updateTestTree = (
 ) => {
     let currentNode = packageRootNode;
     let testSpecName = '';
+    // This is easier to grok inline than it would be if it were split across multiple functions
+    // eslint-disable-next-line max-statements
     modulePathParts.forEach(part => {
         testSpecName += `${part}::`;
         const parentNodeId = currentNode.id;
