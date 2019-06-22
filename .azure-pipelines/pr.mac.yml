@@ -5,7 +5,7 @@ pr:
 - master
 
 pool:
-  vmImage: 'macos-10.13'
+  vmImage: 'macos-10.14'
 
 resources:
   repositories:
@@ -15,6 +15,10 @@ resources:
     endpoint: swellaby
 
 steps:
+- task: UseNode@1
+  displayName: 'Use Node 10.x'
+  inputs:
+    version: 10.x
 - template: templates/yml/node/combo/npm-build-validation-xunit-cobertura.yml@templates
   parameters:
     publishTestResults:
