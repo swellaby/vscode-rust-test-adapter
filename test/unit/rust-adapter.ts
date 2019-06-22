@@ -185,6 +185,15 @@ suite('RustAdapter Tests:', () => {
             assert.isTrue(testStatesEmitterFireStub.calledWithExactly(<TestRunFinishedEvent>{ type: 'finished' }));
             assert.isFalse(logErrorStub.called);
         });
+
+        test('Should correctly handle single test case', async () => {
+            const nodeIds = [ testCase1Id ];
+            setResultForTestCase(testCase1, testCase1Result);
+            await rustAdapter.run(nodeIds);
+            assert.isTrue(testStatesEmitterFireStub.calledWithExactly(<TestRunStartedEvent>{ type: 'started', tests: nodeIds }));
+            assert.isTrue(testStatesEmitterFireStub.calledWithExactly(<TestEvent>testCase1Result));
+            assert.isFalse(logErrorStub.called);
+        });
     });
 
     suite('get tests()', () => {
