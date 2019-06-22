@@ -137,7 +137,7 @@ suite('RustAdapter Tests:', () => {
             runTestSuiteStub.callsFake(() => Promise.resolve([]));
         });
 
-        test('Should correctly handle exception run all', async () => {
+        test('Should correctly handle exception on root-level run all', async () => {
             const nodeIds = [ 'root' ];
             const error = new Error('oh nose!');
             runTestCaseStub.throws(error);
@@ -148,7 +148,7 @@ suite('RustAdapter Tests:', () => {
             assert.isTrue(testStatesEmitterFireStub.calledWithExactly(<TestRunFinishedEvent>{ type: 'finished' }));
         });
 
-        test('Should correctly handle tree-level run all', async () => {
+        test('Should correctly handle root-level run all', async () => {
             const nodeIds = [ 'root' ];
             setResultForTestCase(testCase1, testCase1Result);
             setResultForTestCase(testCase4, testCase4Result);
@@ -166,7 +166,7 @@ suite('RustAdapter Tests:', () => {
             assert.isFalse(logErrorStub.called);
         });
 
-        test('Should correctly handle tree-level run all with structural node', async () => {
+        test('Should correctly handle root-level run all with structural node', async () => {
             loadUnitTestsStub.callsFake(() => Promise.resolve(structuralNodesLoadedTestsResultStub));
             await rustAdapter.load();
             const nodeIds = [ 'root' ];
@@ -192,6 +192,25 @@ suite('RustAdapter Tests:', () => {
             await rustAdapter.run(nodeIds);
             assert.isTrue(testStatesEmitterFireStub.calledWithExactly(<TestRunStartedEvent>{ type: 'started', tests: nodeIds }));
             assert.isTrue(testStatesEmitterFireStub.calledWithExactly(<TestEvent>testCase1Result));
+            assert.isFalse(testStatesEmitterFireStub.calledWithExactly(<TestEvent>testCase2Result));
+            assert.isFalse(testStatesEmitterFireStub.calledWithExactly(<TestEvent>testCase3Result));
+            assert.isFalse(testStatesEmitterFireStub.calledWithExactly(<TestEvent>testCase4Result));
+            assert.isFalse(testStatesEmitterFireStub.calledWithExactly(<TestEvent>testCase5Result));
+            assert.isFalse(logErrorStub.called);
+        });
+
+        test('Should correctly handle test suite target', async () => {
+            const nodeIds = [ testSuite3.id ];
+            setResultsForTestSuite(testSuite3, testSuite3Results);
+            await rustAdapter.run(nodeIds);
+            assert.isTrue(logInfoStub.calledWithExactly('Running Rust Tests'));
+            assert.isTrue(testStatesEmitterFireStub.calledWithExactly(<TestRunStartedEvent>{ type: 'started', tests: nodeIds }));
+            assert.isFalse(testStatesEmitterFireStub.calledWithExactly(<TestEvent>testCase1Result));
+            assert.isTrue(testStatesEmitterFireStub.calledWithExactly(<TestEvent>testCase2Result));
+            assert.isTrue(testStatesEmitterFireStub.calledWithExactly(<TestEvent>testCase3Result));
+            assert.isFalse(testStatesEmitterFireStub.calledWithExactly(<TestEvent>testCase4Result));
+            assert.isFalse(testStatesEmitterFireStub.calledWithExactly(<TestEvent>testCase5Result));
+            assert.isTrue(testStatesEmitterFireStub.calledWithExactly(<TestRunFinishedEvent>{ type: 'finished' }));
             assert.isFalse(logErrorStub.called);
         });
     });
