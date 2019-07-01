@@ -92,7 +92,7 @@
     "@types/sinon": "^7.0.12",
     "chai": "^4.2.0",
     "eslint": "^6.0.0",
-    "husky": "^2.4.0",
+    "husky": "^3.0.0",
     "mocha": "^6.1.4",
     "mocha-multi-reporters": "^1.1.7",
     "mocha-sonarqube-reporter": "^1.0.1",
