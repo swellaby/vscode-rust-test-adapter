@@ -2,7 +2,7 @@
   "name": "vscode-rust-test-adapter",
   "displayName": "Rust Test Explorer",
   "description": "View and run your Rust tests in the Sidebar of Visual Studio Code",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "license": "MIT",
   "preview": true,
   "private": true,
