@@ -15,6 +15,8 @@ import { NodeCategory } from './enums/node-category';
 import { TestSuiteInfo } from 'vscode-test-adapter-api';
 import { ICargoTestListResult } from './interfaces/cargo-test-list-result';
 
+const libTargetTypes = [ 'staticlib', 'dylib', 'cdylib', 'rlib' ];
+
 const runCargoTestCommand = async (testArgs: string, workspaceDir: string, log: Log) => new Promise<string>((resolve, reject) => {
     const execArgs: childProcess.ExecOptions = {
         cwd: workspaceDir,
@@ -38,11 +40,14 @@ const loadPackageUnitTestTree = async (cargoPackage: ICargoPackage, log: Log) =>
     try {
         const cargoTestListResults = await Promise.all(cargoPackage.targets.map(async target => {
             let cargoTestArgs = `-p ${packageName}`;
-            const targetKind = TargetType[target.kind[0]];
+            let targetKind = TargetType[target.kind[0]];
             const targetName = target.name;
             if (targetKind === TargetType.bin) {
                 cargoTestArgs += ` --bin ${targetName}`;
             } else if (targetKind === TargetType.lib) {
+                cargoTestArgs += ' --lib';
+            } else if (libTargetTypes.includes(target.kind[0])) {
+                targetKind = TargetType.lib;
                 cargoTestArgs += ' --lib';
             } else {
                 return undefined;
