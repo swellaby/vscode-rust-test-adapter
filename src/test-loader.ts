@@ -21,7 +21,7 @@ import { ICargoTestListResult } from './interfaces/cargo-test-list-result';
 // See https://github.com/swellaby/vscode-rust-test-adapter/issues/34
 const libTargetTypes = [ 'staticlib', 'dylib', 'cdylib', 'rlib' ];
 
-const runCargoTestCommand = async (testArgs: string, workspaceDir: string, log: Log) => new Promise<string>((resolve, reject) => {
+const runCargoTestCommand = async (testArgs: string, workspaceDir: string, _log: Log) => new Promise<string>((resolve, reject) => {
     const execArgs: childProcess.ExecOptions = {
         cwd: workspaceDir,
         maxBuffer: 400 * 1024
