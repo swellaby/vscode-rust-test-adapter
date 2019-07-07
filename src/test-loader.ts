@@ -37,12 +37,10 @@ const runCargoTestCommand = async (testArgs: string, workspaceDir: string, _log:
 });
 
 const loadPackageUnitTestTree = async (cargoPackage: ICargoPackage, log: Log) => new Promise<ILoadedTestsResult>(async (resolve, reject) => {
-    const manifestPath = cargoPackage.manifest_path;
-    const packageName = cargoPackage.name;
-    const packageRootDirectory = manifestPath.endsWith('Cargo.toml') ? manifestPath.slice(0, -10) : manifestPath;
-
     try {
-        const cargoTestListResults = await Promise.all(cargoPackage.targets.map(async target => {
+        const { manifest_path: manifestPath, name: packageName, targets } = cargoPackage;
+        const packageRootDirectory = manifestPath.endsWith('Cargo.toml') ? manifestPath.slice(0, -10) : manifestPath;
+        const cargoTestListResults = await Promise.all(targets.map(async target => {
             let cargoTestArgs = `-p ${packageName}`;
             let targetKind = TargetType[target.kind[0]];
             const targetName = target.name;

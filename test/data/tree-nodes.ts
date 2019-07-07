@@ -7,7 +7,7 @@ import { ITestCaseNode } from '../../src/interfaces/test-case-node';
 import { INodeTarget } from '../../src/interfaces/node-target';
 import { TargetType } from '../../src/enums/target-type';
 
-const packageName = 'rust-test-sample';
+export const packageName = 'rust-test-sample';
 
 const binTarget: INodeTarget = {
     targetType: TargetType.bin,
