@@ -75,6 +75,7 @@ const getCargoMetadata = async (workspaceDir: string, log: Log) => new Promise<I
         }
         try {
             const cargoMetadata: ICargoMetadata = JSON.parse(stdout);
+            console.log(`cargoMeta: ${JSON.stringify(cargoMetadata, null, 2)}`);
             resolve(cargoMetadata);
         } catch (err) {
             log.debug(err);

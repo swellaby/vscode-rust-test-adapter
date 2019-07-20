@@ -77,5 +77,17 @@ suite('test-loader Tests:', () => {
                 assert.deepEqual(err.message, 'Unable to parse cargo metadata output');
             }
         });
+
+        // When the current directory is a cargo workspace with no members, packages will
+        // be an empty array.
+        test('Should return an empty root node when cargo metadata command yields no packages', async () => {
+            childProcessExecStub.yields(null, '{ "packages": [] }');
+            jsonParseStub.callsFake(() => ({ packages: [] }) );
+            const testsTree = await testLoader.loadUnitTests(null, logStub);
+            assert.deepEqual(testsTree.testCasesMap.size, 0);
+            assert.deepEqual(testsTree.testSuitesMap.size, 1);
+            assert.deepEqual(testsTree.testSuitesMap.get('root').id,  'root');
+            assert.deepEqual(testsTree.rootTestSuite.children.length, 0);
+        });
     });
 });

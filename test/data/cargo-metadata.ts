@@ -7,7 +7,7 @@ export const singleBinTargetMetadata = {
       {
         name: packageName,
         version: '0.1.2',
-        id: `${packageName} 0.1.2 (path+file:///usr/c//dev/${packageName})`,
+        id: `${packageName} 0.1.2 (path+file:///usr/c/dev/${packageName})`,
         license: null,
         license_file: null,
         description: null,
@@ -31,14 +31,14 @@ export const singleBinTargetMetadata = {
             kind: [ 'bin' ],
             crate_types: [ 'bin' ],
             name: packageName,
-            src_path: `/usr/c//dev/${packageName}/src/main.rs`,
+            src_path: `/usr/c/dev/${packageName}/src/main.rs`,
             edition: '2018'
           }
         ],
         features: {},
-        manifest_path: `/usr/c//dev/${packageName}/Cargo.toml`,
+        manifest_path: `/usr/c/dev/${packageName}/Cargo.toml`,
         metadata: null,
-        authors: [ 'calebcartwright <opensource@swellaby.com>'],
+        authors: [ 'swellaby <opensource@swellaby.com>'],
         categories: [],
         keywords: [],
         readme: null,
@@ -47,11 +47,11 @@ export const singleBinTargetMetadata = {
         links: null
       }
     ],
-    workspace_members: [ `${packageName} 0.1.2 (path+file:///usr/c//dev/${packageName})` ],
+    workspace_members: [ `${packageName} 0.1.2 (path+file:///usr/c/dev/${packageName})` ],
     resolve: null,
-    target_directory: `/usr/c//dev/${packageName}/target`,
+    target_directory: `/usr/c/dev/${packageName}/target`,
     version: 1,
-    workspace_root: `/usr/c//dev/${packageName}`
+    workspace_root: `/usr/c/dev/${packageName}`
 };
 
 export const singleBinTargetMetadataJsonString = JSON.stringify(singleBinTargetMetadata);
