@@ -86,7 +86,7 @@ suite('test-loader Tests:', () => {
             const testsTree = await testLoader.loadUnitTests(null, logStub);
             assert.deepEqual(testsTree.testCasesMap.size, 0);
             assert.deepEqual(testsTree.testSuitesMap.size, 1);
-            assert.deepEqual(testsTree.testSuitesMap.get('root').id,  'root');
+            assert.deepEqual(testsTree.testSuitesMap.get('root').id, 'root');
             assert.deepEqual(testsTree.rootTestSuite.children.length, 0);
         });
     });
