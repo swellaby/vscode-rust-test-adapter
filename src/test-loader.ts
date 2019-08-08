@@ -75,7 +75,6 @@ const getCargoMetadata = async (workspaceDir: string, log: Log) => new Promise<I
         }
         try {
             const cargoMetadata: ICargoMetadata = JSON.parse(stdout);
-            console.log(`cargoMeta: ${JSON.stringify(cargoMetadata, null, 2)}`);
             resolve(cargoMetadata);
         } catch (err) {
             log.debug(err);
@@ -109,6 +108,9 @@ export const loadUnitTests = async (workspaceRoot: string, log: Log): Promise<IL
         let testSuitesMap = new Map<string, ITestSuiteNode>();
         let testCasesMap = new Map<string, ITestCaseNode>();
         const packages = (await getCargoMetadata(workspaceRoot, log)).packages;
+        if (packages.length === 0) {
+            return Promise.resolve(null);
+        }
         const packageTests = await Promise.all(packages.map(async p => {
             const packageTestResult = await loadPackageUnitTestTree(p, log);
             if (!packageTestResult) {

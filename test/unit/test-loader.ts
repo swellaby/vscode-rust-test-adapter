@@ -9,6 +9,9 @@ import {
     rustAdapterParams,
     rustAdapterParamStubs
 } from '../test-utils';
+import {
+    singleBinTargetMetadata
+} from '../data/cargo-metadata';
 
 suite('test-loader Tests:', () => {
     let childProcessExecStub: Sinon.SinonStub;
@@ -84,10 +87,14 @@ suite('test-loader Tests:', () => {
             childProcessExecStub.yields(null, '{ "packages": [] }');
             jsonParseStub.callsFake(() => ({ packages: [] }) );
             const testsTree = await testLoader.loadUnitTests(null, logStub);
-            assert.deepEqual(testsTree.testCasesMap.size, 0);
-            assert.deepEqual(testsTree.testSuitesMap.size, 1);
-            assert.deepEqual(testsTree.testSuitesMap.get('root').id, 'root');
-            assert.deepEqual(testsTree.rootTestSuite.children.length, 0);
+            assert.isNull(testsTree);
+        });
+    });
+
+    suite('loadPackageUnitTree()', () => {
+        setup(() => {
+            childProcessExecStub.onFirstCall().yields(null, '');
+            jsonParseStub.callsFake(() => singleBinTargetMetadata);
         });
     });
 });
