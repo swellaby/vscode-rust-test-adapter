@@ -3,6 +3,7 @@
 import { ExecOptions, exec } from 'child_process';
 import { Log } from 'vscode-test-adapter-util';
 import { ICargoMetadata } from './interfaces/cargo-metadata';
+import { ICargoTestListResult } from './interfaces/cargo-test-list-result';
 
 export const runCargoCommand = async (
     subCommand: string,
@@ -42,5 +43,22 @@ export const getCargoMetadata = async (
     } catch (err) {
         log.debug(err);
         reject(new Error('Unable to parse cargo metadata output'));
+    }
+});
+
+export const getCargoTestListOutput = async (
+    targetWorkspace: string,
+    log: Log,
+    testArgs: string = '',
+    maxBuffer: number = 400 * 1024
+) => new Promise<string>(async (resolve, reject) => {
+    const cargoSubCommand = 'test';
+    const args = `${testArgs} -- --list`;
+    try {
+        const stdout = await runCargoCommand(cargoSubCommand, args, targetWorkspace, maxBuffer);
+        resolve(stdout);
+    } catch (err) {
+        log.debug(err);
+        reject(new Error('Unable to retrieve enumeration of tests'));
     }
 });

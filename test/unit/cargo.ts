@@ -5,19 +5,24 @@ import * as childProcess from 'child_process';
 import * as Sinon from 'sinon';
 
 import * as cargo from '../../src/cargo';
-// import {
-//     rustAdapterParams,
-//     rustAdapterParamStubs
-// } from '../test-utils';
-// import {
-//     singleBinTargetMetadata
-// } from '../data/cargo-metadata';
+import {
+    rustAdapterParams,
+    rustAdapterParamStubs
+} from '../test-utils';
+import {
+    singleBinTargetMetadata
+} from '../data/cargo-metadata';
 
 suite('cargo Tests:', () => {
+    let runCargoCommandStub: Sinon.SinonStub;
     let childProcessExecStub: Sinon.SinonStub;
-    // let logDebugStub: Sinon.SinonStub;
-    // let jsonParseStub: Sinon.SinonStub;
-    // const { logStub } = rustAdapterParams;
+    let logDebugStub: Sinon.SinonStub;
+    const { logStub } = rustAdapterParams;
+    const workspaceRoot = '/usr/me/test';
+
+    setup(() => {
+        logDebugStub = rustAdapterParamStubs.log.getDebugStub();
+    });
 
     teardown(() => {
         Sinon.restore();
@@ -26,7 +31,6 @@ suite('cargo Tests:', () => {
     suite('runCargoCommand()', () => {
         const subCommand = 'foo';
         const args = '--message-format json';
-        const workspaceRoot = '/usr/me/test';
         const maxBuffer = 100 * 1024;
 
         setup(() => {
@@ -101,6 +105,103 @@ suite('cargo Tests:', () => {
             childProcessExecStub.yields(null, expStdout, null);
             const stdout = await cargo.runCargoCommand(subCommand, args, workspaceRoot, maxBuffer);
             assert.deepEqual(stdout, expStdout);
+        });
+    });
+
+    suite('getCargoMetadata()', () => {
+        setup(() => {
+            runCargoCommandStub = Sinon.stub(cargo, 'runCargoCommand').callsFake(() => Promise.resolve('{}'));
+        });
+
+        test('Should handle exception correctly', async () => {
+            const error = new Error('Invalid Cargo.toml');
+            runCargoCommandStub.callsFake(() => Promise.reject(error));
+            try {
+                await cargo.getCargoMetadata(workspaceRoot, logStub);
+                assert.fail('Should have thrown');
+            } catch (err) {
+                assert.isTrue(logDebugStub.calledWith(error));
+                assert.deepEqual(err.message, 'Unable to parse cargo metadata output');
+            }
+        });
+
+        test('Should use correct subcommand, args, and workspace', async () => {
+            await cargo.getCargoMetadata(workspaceRoot, logStub);
+            const expCargoSubCommand = 'metadata';
+            const expCargoArgs = '--no-deps --format-version 1';
+            const args = runCargoCommandStub.firstCall.args;
+            assert.deepEqual(args[0], expCargoSubCommand);
+            assert.deepEqual(args[1], expCargoArgs);
+            assert.deepEqual(args[2], workspaceRoot);
+        });
+
+        test('Should use correct default max buffer size', async () => {
+            const expMaxBufferSize = 300 * 1024;
+            await cargo.getCargoMetadata(workspaceRoot, logStub);
+            const actMaxBufferSize = runCargoCommandStub.firstCall.args[3];
+            assert.deepEqual(actMaxBufferSize, expMaxBufferSize);
+        });
+
+        test('Should use specified max buffer size', async () => {
+            const expMaxBufferSize = 100 * 1024;
+            await cargo.getCargoMetadata(workspaceRoot, logStub, expMaxBufferSize);
+            const actMaxBufferSize = runCargoCommandStub.firstCall.args[3];
+            assert.deepEqual(actMaxBufferSize, expMaxBufferSize);
+        });
+
+        test('Should return CargoMetadata object', async () => {
+            runCargoCommandStub.callsFake(() => Promise.resolve(JSON.stringify(singleBinTargetMetadata)));
+            const cargoMetadata = await cargo.getCargoMetadata(workspaceRoot, logStub);
+            assert.deepEqual(cargoMetadata, singleBinTargetMetadata);
+        });
+    });
+
+    suite('getCargoTestListOutput()', () => {
+        setup(() => {
+            runCargoCommandStub = Sinon.stub(cargo, 'runCargoCommand').callsFake(() => Promise.resolve('{}'));
+        });
+
+        test('Should handle exception correctly', async () => {
+            const error = new Error('Kaboom');
+            runCargoCommandStub.callsFake(() => Promise.reject(error));
+            try {
+                await cargo.getCargoTestListOutput(workspaceRoot, logStub);
+                assert.fail('Should have thrown');
+            } catch (err) {
+                assert.isTrue(logDebugStub.calledWith(error));
+                assert.deepEqual(err.message, 'Unable to retrieve enumeration of tests');
+            }
+        });
+
+        test('Should use correct subcommand, default args, and workspace', async () => {
+            await cargo.getCargoTestListOutput(workspaceRoot, logStub);
+            const expCargoSubCommand = 'test';
+            const expCargoArgs = ' -- --list';
+            const args = runCargoCommandStub.firstCall.args;
+            assert.deepEqual(args[0], expCargoSubCommand);
+            assert.deepEqual(args[1], expCargoArgs);
+            assert.deepEqual(args[2], workspaceRoot);
+        });
+
+        test('Should use correct default max buffer size', async () => {
+            const expMaxBufferSize = 400 * 1024;
+            await cargo.getCargoTestListOutput(workspaceRoot, logStub);
+            const actMaxBufferSize = runCargoCommandStub.firstCall.args[3];
+            assert.deepEqual(actMaxBufferSize, expMaxBufferSize);
+        });
+
+        test('Should use specified max buffer size', async () => {
+            const expMaxBufferSize = 100 * 1024;
+            await cargo.getCargoTestListOutput(workspaceRoot, logStub, '', expMaxBufferSize);
+            const actMaxBufferSize = runCargoCommandStub.firstCall.args[3];
+            assert.deepEqual(actMaxBufferSize, expMaxBufferSize);
+        });
+
+        test('Should use specified args', async () => {
+            const args = '--lib';
+            await cargo.getCargoTestListOutput(workspaceRoot, logStub, args);
+            const actArgs = runCargoCommandStub.firstCall.args[1];
+            assert.deepEqual(actArgs, `${args} -- --list`);
         });
     });
 });

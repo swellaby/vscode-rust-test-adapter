@@ -1,8 +1,9 @@
 'use strict';
 
 import * as childProcess from 'child_process';
+import { TestSuiteInfo } from 'vscode-test-adapter-api';
 
-import { ICargoMetadata } from './interfaces/cargo-metadata';
+import { getCargoMetadata } from './cargo';
 import { ILoadedTestsResult } from './interfaces/loaded-tests-result';
 import { Log } from 'vscode-test-adapter-util';
 import { ICargoPackage } from './interfaces/cargo-package';
@@ -12,7 +13,6 @@ import { ITestSuiteNode } from './interfaces/test-suite-node';
 import { ITestCaseNode } from './interfaces/test-case-node';
 import { TargetType } from './enums/target-type';
 import { NodeCategory } from './enums/node-category';
-import { TestSuiteInfo } from 'vscode-test-adapter-api';
 import { ICargoTestListResult } from './interfaces/cargo-test-list-result';
 
 // https://doc.rust-lang.org/reference/linkage.html
@@ -63,25 +63,25 @@ const loadPackageUnitTestTree = async (cargoPackage: ICargoPackage, log: Log) =>
     }
 });
 
-const getCargoMetadata = async (workspaceDir: string, log: Log) => new Promise<ICargoMetadata>((resolve, reject) => {
-    const execArgs: childProcess.ExecOptions = {
-        cwd: workspaceDir,
-        maxBuffer: 300 * 1024
-    };
-    const cmd = 'cargo metadata --no-deps --format-version 1';
-    childProcess.exec(cmd, execArgs, (err, stdout) => {
-        if (err) {
-            return reject(err);
-        }
-        try {
-            const cargoMetadata: ICargoMetadata = JSON.parse(stdout);
-            resolve(cargoMetadata);
-        } catch (err) {
-            log.debug(err);
-            reject(new Error('Unable to parse cargo metadata output'));
-        }
-    });
-});
+// const getCargoMetadata = async (workspaceDir: string, log: Log) => new Promise<ICargoMetadata>((resolve, reject) => {
+//     const execArgs: childProcess.ExecOptions = {
+//         cwd: workspaceDir,
+//         maxBuffer: 300 * 1024
+//     };
+//     const cmd = 'cargo metadata --no-deps --format-version 1';
+//     childProcess.exec(cmd, execArgs, (err, stdout) => {
+//         if (err) {
+//             return reject(err);
+//         }
+//         try {
+//             const cargoMetadata: ICargoMetadata = JSON.parse(stdout);
+//             resolve(cargoMetadata);
+//         } catch (err) {
+//             log.debug(err);
+//             reject(new Error('Unable to parse cargo metadata output'));
+//         }
+//     });
+// });
 
 const buildRootTestSuiteInfoNode = (packageTestNodes: ILoadedTestsResult[], testSuitesMap: Map<string, ITestSuiteNode>): TestSuiteInfo => {
     const testSuiteNodes: TestSuiteInfo[] = [];
