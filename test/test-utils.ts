@@ -19,6 +19,10 @@ import {
     testSuitesMapStub
 } from './data/tree-nodes';
 
+import {
+    swansonLibPackage
+} from './data/cargo-packages';
+
 type TestRunEvent = TestRunStartedEvent | TestRunFinishedEvent | TestEvent;
 type TestLoadEvent = TestLoadStartedEvent | TestLoadFinishedEvent;
 
@@ -78,4 +82,8 @@ export const treeNodes = {
     testSuites,
     testSuitesMapStub,
     structuralNodesLoadedTestsResultStub
+};
+
+export const cargoPackages = {
+    swansonLibPackage
 };

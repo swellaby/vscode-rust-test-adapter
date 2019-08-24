@@ -3,7 +3,7 @@
 import * as childProcess from 'child_process';
 import { TestSuiteInfo } from 'vscode-test-adapter-api';
 
-import { getCargoMetadata } from './cargo';
+import { getCargoMetadata, getCargoTestListOutput } from './cargo';
 import { ILoadedTestsResult } from './interfaces/loaded-tests-result';
 import { Log } from 'vscode-test-adapter-util';
 import { ICargoPackage } from './interfaces/cargo-package';
@@ -21,20 +21,20 @@ import { ICargoTestListResult } from './interfaces/cargo-test-list-result';
 // See https://github.com/swellaby/vscode-rust-test-adapter/issues/34
 const libTargetTypes = [ 'staticlib', 'dylib', 'cdylib', 'rlib' ];
 
-const runCargoTestCommand = async (testArgs: string, workspaceDir: string, _log: Log) => new Promise<string>((resolve, reject) => {
-    const execArgs: childProcess.ExecOptions = {
-        cwd: workspaceDir,
-        maxBuffer: 400 * 1024
-    };
-    const cmd = `cargo test ${testArgs ? `${testArgs}` : ''} -- --list`;
-    childProcess.exec(cmd, execArgs, (err, stdout) => {
-        if (err) {
-            // log.debug(err);
-            return reject(err);
-        }
-        resolve(stdout);
-    });
-});
+// const runCargoTestCommand = async (testArgs: string, workspaceDir: string, _log: Log) => new Promise<string>((resolve, reject) => {
+//     const execArgs: childProcess.ExecOptions = {
+//         cwd: workspaceDir,
+//         maxBuffer: 400 * 1024
+//     };
+//     const cmd = `cargo test ${testArgs ? `${testArgs}` : ''} -- --list`;
+//     childProcess.exec(cmd, execArgs, (err, stdout) => {
+//         if (err) {
+//             // log.debug(err);
+//             return reject(err);
+//         }
+//         resolve(stdout);
+//     });
+// });
 
 const loadPackageUnitTestTree = async (cargoPackage: ICargoPackage, log: Log) => new Promise<ILoadedTestsResult>(async (resolve, reject) => {
     try {
@@ -54,7 +54,7 @@ const loadPackageUnitTestTree = async (cargoPackage: ICargoPackage, log: Log) =>
             } else {
                 return undefined;
             }
-            const output = await runCargoTestCommand(cargoTestArgs, packageRootDirectory, log);
+            const output = await getCargoTestListOutput(packageRootDirectory, log, cargoTestArgs);
             return <ICargoTestListResult>{ output, nodeTarget: { targetType: targetKind, targetName } };
         }));
         resolve(parseCargoTestListResults(cargoPackage, cargoTestListResults));

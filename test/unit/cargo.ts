@@ -7,7 +7,8 @@ import * as Sinon from 'sinon';
 import * as cargo from '../../src/cargo';
 import {
     rustAdapterParams,
-    rustAdapterParamStubs
+    rustAdapterParamStubs,
+    cargoPackages
 } from '../test-utils';
 import {
     singleBinTargetMetadata
@@ -158,7 +159,7 @@ suite('cargo Tests:', () => {
 
     suite('getCargoTestListOutput()', () => {
         setup(() => {
-            runCargoCommandStub = Sinon.stub(cargo, 'runCargoCommand').callsFake(() => Promise.resolve('{}'));
+            runCargoCommandStub = Sinon.stub(cargo, 'runCargoCommand').callsFake(() => Promise.resolve(''));
         });
 
         test('Should handle exception correctly', async () => {
@@ -202,6 +203,45 @@ suite('cargo Tests:', () => {
             await cargo.getCargoTestListOutput(workspaceRoot, logStub, args);
             const actArgs = runCargoCommandStub.firstCall.args[1];
             assert.deepEqual(actArgs, `${args} -- --list`);
+        });
+    });
+
+    suite('getCargoTestListForPackage()', () => {
+        const { swansonLibPackage } = cargoPackages;
+        let getCargoTestListOutputStub: Sinon.SinonStub;
+
+        setup(() => {
+            getCargoTestListOutputStub = Sinon.stub(cargo, 'getCargoTestListOutput').callsFake(() => Promise.resolve(''));
+        });
+
+        test('Should handle null package parameter correctly', async () => {
+            try {
+                await cargo.getCargoTestListForPackage(null, logStub);
+                assert.fail('Should have thrown');
+            } catch (err) {
+                assert.deepEqual(err.message, 'Invalid value specified parameter `cargoPackage`. Unable to load tests for null/undefined package.');
+            }
+        });
+
+        test('Should handle undefined package parameter correctly', async () => {
+            try {
+                await cargo.getCargoTestListForPackage(undefined, logStub);
+                assert.fail('Should have thrown');
+            } catch (err) {
+                assert.deepEqual(err.message, 'Invalid value specified parameter `cargoPackage`. Unable to load tests for null/undefined package.');
+            }
+        });
+
+        test('Should handle thrown exception correctly', async () => {
+            getCargoTestListOutputStub.callsFake(() => Promise.reject(error));
+            const error = new Error(':(');
+            try {
+                await cargo.getCargoTestListForPackage(swansonLibPackage, logStub);
+                assert.fail('Should have thrown');
+            } catch (err) {
+                assert.isTrue(logDebugStub.calledWith(error));
+                assert.deepEqual(err.message, `Failed to load tests for package: ${swansonLibPackage.name}.`);
+            }
         });
     });
 });
