@@ -10,6 +10,7 @@
     "hbenl",
     "libc",
     "mocharc",
+    "nias",
     "opensource",
     "posttest",
     "preeslint",

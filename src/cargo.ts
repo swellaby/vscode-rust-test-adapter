@@ -7,6 +7,7 @@ import { ICargoTestListResult } from './interfaces/cargo-test-list-result';
 import { ICargoPackage } from './interfaces/cargo-package';
 import { ICargoPackageTarget } from './interfaces/cargo-package-target';
 import { TargetType } from './enums/target-type';
+import { INodeTarget } from './interfaces/node-target';
 
 // https://doc.rust-lang.org/reference/linkage.html
 // Other types of various lib targets that may be listed in the Cargo metadata.
@@ -72,42 +73,58 @@ export const getCargoTestListOutput = async (
     }
 });
 
-export const getCargoTargetOption = (target: ICargoPackageTarget) => {
-    let targetKind = TargetType[target.kind[0]];
-    const targetName = target.name;
-    let targetOption = '';
-    if (targetKind === TargetType.bin) {
-        targetOption = `--bin ${targetName}`;
-    } else if (targetKind === TargetType.lib) {
-        targetOption = '--lib';
-    } else if (libTargetTypes.includes(target.kind[0])) {
-        targetOption = '--lib';
-        targetKind = TargetType.lib;
+export const getCargoTargetFilter = (nodeTarget: INodeTarget) => {
+    const { targetName, targetType } = nodeTarget;
+    if (targetType === TargetType.lib) {
+        return '--lib';
+    } else if (targetType === TargetType.bin) {
+        return `--bin ${targetName}`;
     } else {
-        throw new Error(`Unsupported target type: ${targetName}`);
+        return `--test ${targetName}`;
+    }
+};
+
+export const getCargoNodeTarget = (target: ICargoPackageTarget): INodeTarget => {
+    const targetName = target.name;
+    const targetKind = target.kind[0];
+    let targetType = TargetType[targetKind];
+
+    if (libTargetTypes.includes(targetKind)) {
+        targetType = TargetType.lib;
     }
 
-    return {
-        targetOption,
-        targetKind,
+    if (!targetType) {
+        throw new Error(`Unsupported target type: ${targetKind} for ${targetName}`);
+    }
+
+    return <INodeTarget> {
+        targetType,
         targetName
     };
 };
 
 export const getCargoTestListForPackage = async (cargoPackage: ICargoPackage, log: Log) => new Promise<ICargoTestListResult[]>(async (resolve, reject) => {
     if (!cargoPackage) {
-        reject(new Error('Invalid value specified parameter `cargoPackage`. Unable to load tests for null/undefined package.'));
+        return reject(new Error('Invalid value specified for parameter `cargoPackage`. Unable to load tests for null/undefined package.'));
     }
+    const allowedTargetTypes: TargetType[] = [ TargetType.bin, TargetType.lib ];
     const { manifest_path: manifestPath, name: packageName, targets } = cargoPackage;
     try {
         const packageRootDirectory = manifestPath.endsWith('Cargo.toml') ? manifestPath.slice(0, -10) : manifestPath;
+        // Map/filter is used instead of reduce because the number of targets will be pretty small. The far more expensive work is done by
+        // cargo with each invocation, so it's better to fire all of those requests off asynchronously with map/filter and iterate over
+        // the list twice vs. invoking the cargo commands sequentially.
         const cargoTestListResults = await Promise.all(targets.map(async target => {
+            const nodeTarget = getCargoNodeTarget(target);
+            if (!allowedTargetTypes.includes(nodeTarget.targetType)) {
+                return undefined;
+            }
             let cargoTestArgs = `-p ${packageName}`;
-            const { targetOption, targetKind, targetName } = getCargoTargetOption(target);
+            const targetOption = getCargoTargetFilter(nodeTarget);
             cargoTestArgs += ` ${targetOption}`;
             const output = await getCargoTestListOutput(packageRootDirectory, log, cargoTestArgs);
-            return <ICargoTestListResult>{ output, nodeTarget: { targetType: targetKind, targetName } };
-        }));
+            return <ICargoTestListResult>{ output, nodeTarget };
+        }).filter(r => r));
         resolve(cargoTestListResults);
     } catch (err) {
         log.debug(err);

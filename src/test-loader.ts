@@ -1,6 +1,5 @@
 'use strict';
 
-import * as childProcess from 'child_process';
 import { TestSuiteInfo } from 'vscode-test-adapter-api';
 
 import { getCargoMetadata, getCargoTestListOutput } from './cargo';
@@ -20,21 +19,6 @@ import { ICargoTestListResult } from './interfaces/cargo-test-list-result';
 // However, we still need to use --lib for both test detection and execution with all of these.
 // See https://github.com/swellaby/vscode-rust-test-adapter/issues/34
 const libTargetTypes = [ 'staticlib', 'dylib', 'cdylib', 'rlib' ];
-
-// const runCargoTestCommand = async (testArgs: string, workspaceDir: string, _log: Log) => new Promise<string>((resolve, reject) => {
-//     const execArgs: childProcess.ExecOptions = {
-//         cwd: workspaceDir,
-//         maxBuffer: 400 * 1024
-//     };
-//     const cmd = `cargo test ${testArgs ? `${testArgs}` : ''} -- --list`;
-//     childProcess.exec(cmd, execArgs, (err, stdout) => {
-//         if (err) {
-//             // log.debug(err);
-//             return reject(err);
-//         }
-//         resolve(stdout);
-//     });
-// });
 
 const loadPackageUnitTestTree = async (cargoPackage: ICargoPackage, log: Log) => new Promise<ILoadedTestsResult>(async (resolve, reject) => {
     try {
@@ -62,26 +46,6 @@ const loadPackageUnitTestTree = async (cargoPackage: ICargoPackage, log: Log) =>
         reject(err);
     }
 });
-
-// const getCargoMetadata = async (workspaceDir: string, log: Log) => new Promise<ICargoMetadata>((resolve, reject) => {
-//     const execArgs: childProcess.ExecOptions = {
-//         cwd: workspaceDir,
-//         maxBuffer: 300 * 1024
-//     };
-//     const cmd = 'cargo metadata --no-deps --format-version 1';
-//     childProcess.exec(cmd, execArgs, (err, stdout) => {
-//         if (err) {
-//             return reject(err);
-//         }
-//         try {
-//             const cargoMetadata: ICargoMetadata = JSON.parse(stdout);
-//             resolve(cargoMetadata);
-//         } catch (err) {
-//             log.debug(err);
-//             reject(new Error('Unable to parse cargo metadata output'));
-//         }
-//     });
-// });
 
 const buildRootTestSuiteInfoNode = (packageTestNodes: ILoadedTestsResult[], testSuitesMap: Map<string, ITestSuiteNode>): TestSuiteInfo => {
     const testSuiteNodes: TestSuiteInfo[] = [];

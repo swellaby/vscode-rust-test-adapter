@@ -37,7 +37,7 @@
     "clean": "npm run clean:test && npm run clean:js && clean:vsix",
     "pretranspile": "npm run clean:js",
     "transpile": "tsc",
-    "tslint": "tslint -p tsconfig.json -c tslint.json -t stylish src/**/*.ts test/**/*.ts",
+    "tslint": "tslint -p tsconfig.json -t stylish src/**/*.ts test/**/*.ts",
     "eslint:build": "eslint \"**/*.js\"",
     "eslint": "npm run eslint:build",
     "preeslint": "npm run transpile",
