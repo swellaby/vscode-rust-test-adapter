@@ -73,14 +73,14 @@ export const getCargoTestListOutput = async (
     }
 });
 
-export const getCargoTargetFilter = (nodeTarget: INodeTarget) => {
+export const getCargoPackageTargetFilter = (packageName: string, nodeTarget: INodeTarget) => {
     const { targetName, targetType } = nodeTarget;
     if (targetType === TargetType.lib) {
-        return '--lib';
+        return `-p ${packageName} --lib`;
     } else if (targetType === TargetType.bin) {
-        return `--bin ${targetName}`;
+        return `-p ${packageName} --bin ${targetName}`;
     } else {
-        return `--test ${targetName}`;
+        return `-p ${packageName} --test ${targetName}`;
     }
 };
 
@@ -103,29 +103,32 @@ export const getCargoNodeTarget = (target: ICargoPackageTarget): INodeTarget => 
     };
 };
 
-export const getCargoTestListForPackage = async (cargoPackage: ICargoPackage, log: Log) => new Promise<ICargoTestListResult[]>(async (resolve, reject) => {
+export const getCargoTestListForPackage = async (
+    cargoPackage: ICargoPackage,
+    log: Log,
+    allowedTargetTypes: TargetType[],
+    additionalArgs: string = ''
+) => new Promise<ICargoTestListResult[]>(async (resolve, reject) => {
     if (!cargoPackage) {
         return reject(new Error('Invalid value specified for parameter `cargoPackage`. Unable to load tests for null/undefined package.'));
     }
-    const allowedTargetTypes: TargetType[] = [ TargetType.bin, TargetType.lib ];
     const { manifest_path: manifestPath, name: packageName, targets } = cargoPackage;
     try {
         const packageRootDirectory = manifestPath.endsWith('Cargo.toml') ? manifestPath.slice(0, -10) : manifestPath;
         // Map/filter is used instead of reduce because the number of targets will be pretty small. The far more expensive work is done by
         // cargo with each invocation, so it's better to fire all of those requests off asynchronously with map/filter and iterate over
-        // the list twice vs. invoking the cargo commands sequentially.
+        // the list twice vs. using reduce and invoking the cargo commands sequentially.
         const cargoTestListResults = await Promise.all(targets.map(async target => {
             const nodeTarget = getCargoNodeTarget(target);
             if (!allowedTargetTypes.includes(nodeTarget.targetType)) {
                 return undefined;
             }
-            let cargoTestArgs = `-p ${packageName}`;
-            const targetOption = getCargoTargetFilter(nodeTarget);
-            cargoTestArgs += ` ${targetOption}`;
+            const filter = getCargoPackageTargetFilter(packageName, nodeTarget);
+            const cargoTestArgs = `${filter}${additionalArgs ? ` ${additionalArgs}` : ''}`;
             const output = await getCargoTestListOutput(packageRootDirectory, log, cargoTestArgs);
             return <ICargoTestListResult>{ output, nodeTarget };
-        }).filter(r => r));
-        resolve(cargoTestListResults);
+        }));
+        resolve(cargoTestListResults.filter(Boolean));
     } catch (err) {
         log.debug(err);
         reject(new Error(`Failed to load tests for package: ${packageName}.`));

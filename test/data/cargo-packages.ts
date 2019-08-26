@@ -10,6 +10,10 @@ export const swansonLibPackage = <ICargoPackage>{
         <ICargoPackageTarget> {
             kind: [ 'lib' ],
             name: 'swanson'
+        },
+        <ICargoPackageTarget> {
+            kind: [ 'bin' ],
+            name: 'ron'
         }
     ]
 };
