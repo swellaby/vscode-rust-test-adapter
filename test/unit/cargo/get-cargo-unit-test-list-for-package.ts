@@ -28,7 +28,7 @@ export default function suite() {
             output: '2 tests',
             nodeTarget: binNodeTarget
         }
-    ]
+    ];
 
     setup(function () {
         getCargoTestListForPackageStub = Sinon.stub(cargo, 'getCargoTestListForPackage').callsFake(() => Promise.resolve(expectedResults));
