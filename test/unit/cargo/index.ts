@@ -8,6 +8,7 @@ import getCargoMetadata from './get-cargo-metadata';
 import getCargoPackageTargetFilter from './get-cargo-package-target-filter';
 import getCargoTestListForPackage from './get-cargo-test-list-for-package';
 import getCargoTestListOutput from './get-cargo-test-list-output';
+import getCargoUnitTestListForPackage from './get-cargo-unit-test-list-for-package';
 import runCargoCommand from './run-cargo-command';
 
 suite('cargo Tests:', function () {
@@ -24,5 +25,6 @@ suite('cargo Tests:', function () {
     suite('getCargoPackageTargetFilter()', getCargoPackageTargetFilter.bind(this));
     suite('getCargoTestListForPackage()', getCargoTestListForPackage.bind(this));
     suite('getCargoTestListOutput()', getCargoTestListOutput.bind(this));
+    suite('getCargoUnitTestListForPackage()', getCargoUnitTestListForPackage.bind(this));
     suite('runCargoCommand()', runCargoCommand.bind(this));
 });

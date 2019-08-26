@@ -14,6 +14,7 @@ import { INodeTarget } from './interfaces/node-target';
 // However, we still need to use --lib for both test detection and execution with all of these.
 // See https://github.com/swellaby/vscode-rust-test-adapter/issues/34
 const libTargetTypes = [ 'staticlib', 'dylib', 'cdylib', 'rlib' ];
+const unitTestTargetTypes = [ TargetType.bin, TargetType.lib ];
 
 export const runCargoCommand = async (
     subCommand: string,
@@ -134,3 +135,16 @@ export const getCargoTestListForPackage = async (
         reject(new Error(`Failed to load tests for package: ${packageName}.`));
     }
 });
+
+export const getCargoUnitTestListForPackage = async (
+    cargoPackage: ICargoPackage,
+    log: Log,
+    additionalArgs: string = ''
+): Promise<ICargoTestListResult[]> => {
+    return getCargoTestListForPackage(
+        cargoPackage,
+        log,
+        unitTestTargetTypes,
+        additionalArgs
+    );
+};
