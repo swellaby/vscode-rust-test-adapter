@@ -11,7 +11,6 @@ import { ICargoTestListResult } from '../../../src/interfaces/cargo-test-list-re
 
 // tslint:disable-next-line:max-func-body-length
 export default function suite() {
-    let logDebugStub: Sinon.SinonStub;
     let getCargoTestListForPackageStub: Sinon.SinonStub;
     const { logStub } = rustAdapterParams;
     const { swansonLibPackage } = cargoPackages;
@@ -30,9 +29,8 @@ export default function suite() {
         }
     ];
 
-    setup(function () {
+    setup(() => {
         getCargoTestListForPackageStub = Sinon.stub(cargo, 'getCargoTestListForPackage').callsFake(() => Promise.resolve(expectedResults));
-        logDebugStub = this.test.ctx.logDebugStub;
     });
 
     test('Should use the correct default args when no additional arguments specified', async () => {
@@ -49,6 +47,11 @@ export default function suite() {
     test('Should use the correct allowed target types', async () => {
         await cargo.getCargoUnitTestListForPackage(swansonLibPackage, logStub);
         assert.deepEqual(getCargoTestListForPackageStub.firstCall.args[2], allowedTargetTypes);
+    });
+
+    test('Should use the provided logger', async () => {
+        await cargo.getCargoUnitTestListForPackage(swansonLibPackage, logStub);
+        assert.deepEqual(getCargoTestListForPackageStub.firstCall.args[1], logStub);
     });
 
     test('Should return array with results for allowed target types', async () => {
