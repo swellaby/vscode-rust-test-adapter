@@ -46,7 +46,8 @@ const autoRunEmitterStub = {
 const logStub = <Log>{
     info: (_message: string) => null,
     error: (_message: string) => null,
-    debug: (_message: string) => null
+    debug: (_message: string) => null,
+    warn: (_message: string) => null
 };
 
 export const rustAdapterParams = {
@@ -60,7 +61,8 @@ export const rustAdapterParamStubs = {
     log: {
         getInfoStub: () => Sinon.stub(logStub, 'info'),
         getErrorStub: () => Sinon.stub(logStub, 'error'),
-        getDebugStub: () => Sinon.stub(logStub, 'debug')
+        getDebugStub: () => Sinon.stub(logStub, 'debug'),
+        getWarnStub: () => Sinon.stub(logStub, 'warn')
     },
     testsEmitterStubs: {
         getDisposeStub: () => Sinon.stub(testsEmitterStub, 'dispose'),

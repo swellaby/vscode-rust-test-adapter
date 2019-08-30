@@ -85,7 +85,7 @@ export const getCargoPackageTargetFilter = (packageName: string, nodeTarget: INo
     }
 };
 
-export const getCargoNodeTarget = (target: ICargoPackageTarget): INodeTarget => {
+export const getCargoNodeTarget = (target: ICargoPackageTarget, log: Log): INodeTarget => {
     const targetName = target.name;
     const targetKind = target.kind[0];
     let targetType = TargetType[targetKind];
@@ -95,7 +95,8 @@ export const getCargoNodeTarget = (target: ICargoPackageTarget): INodeTarget => 
     }
 
     if (!targetType) {
-        throw new Error(`Unsupported target type: ${targetKind} for ${targetName}`);
+        log.warn(`Unsupported target type: ${targetKind} for ${targetName}`);
+        return undefined;
     }
 
     return <INodeTarget> {
@@ -120,7 +121,7 @@ export const getCargoTestListForPackage = async (
         // cargo with each invocation, so it's better to fire all of those requests off asynchronously with map/filter and iterate over
         // the list twice vs. using reduce and invoking the cargo commands sequentially.
         const cargoTestListResults = await Promise.all(targets.map(async target => {
-            const nodeTarget = getCargoNodeTarget(target);
+            const nodeTarget = getCargoNodeTarget(target, log);
             if (!allowedTargetTypes.includes(nodeTarget.targetType)) {
                 return undefined;
             }

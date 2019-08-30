@@ -86,8 +86,8 @@ export default function suite() {
 
     test('Should create a node target for each package target', async () => {
         await cargo.getCargoTestListForPackage(swansonLibPackage, logStub, allowedTargetTypes);
-        assert.isTrue(getCargoNodeTargetStub.calledWithExactly(swansonLibPackage.targets[0]));
-        assert.isTrue(getCargoNodeTargetStub.calledWithExactly(swansonLibPackage.targets[1]));
+        assert.isTrue(getCargoNodeTargetStub.calledWithExactly(swansonLibPackage.targets[0], logStub));
+        assert.isTrue(getCargoNodeTargetStub.calledWithExactly(swansonLibPackage.targets[1], logStub));
     });
 
     test('Should use the package name and node target to create the filter', async () => {

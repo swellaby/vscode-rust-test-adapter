@@ -2,7 +2,7 @@
 
 import { TestSuiteInfo } from 'vscode-test-adapter-api';
 
-import { getCargoMetadata, getCargoTestListOutput } from './cargo';
+import { getCargoMetadata, getCargoUnitTestListForPackage } from './cargo';
 import { ILoadedTestsResult } from './interfaces/loaded-tests-result';
 import { Log } from 'vscode-test-adapter-util';
 import { ICargoPackage } from './interfaces/cargo-package';
@@ -13,39 +13,6 @@ import { ITestCaseNode } from './interfaces/test-case-node';
 import { TargetType } from './enums/target-type';
 import { NodeCategory } from './enums/node-category';
 import { ICargoTestListResult } from './interfaces/cargo-test-list-result';
-
-// https://doc.rust-lang.org/reference/linkage.html
-// Other types of various lib targets that may be listed in the Cargo metadata.
-// However, we still need to use --lib for both test detection and execution with all of these.
-// See https://github.com/swellaby/vscode-rust-test-adapter/issues/34
-const libTargetTypes = [ 'staticlib', 'dylib', 'cdylib', 'rlib' ];
-
-const loadPackageUnitTestTree = async (cargoPackage: ICargoPackage, log: Log) => new Promise<ILoadedTestsResult>(async (resolve, reject) => {
-    try {
-        const { manifest_path: manifestPath, name: packageName, targets } = cargoPackage;
-        const packageRootDirectory = manifestPath.endsWith('Cargo.toml') ? manifestPath.slice(0, -10) : manifestPath;
-        const cargoTestListResults = await Promise.all(targets.map(async target => {
-            let cargoTestArgs = `-p ${packageName}`;
-            let targetKind = TargetType[target.kind[0]];
-            const targetName = target.name;
-            if (targetKind === TargetType.bin) {
-                cargoTestArgs += ` --bin ${targetName}`;
-            } else if (targetKind === TargetType.lib) {
-                cargoTestArgs += ' --lib';
-            } else if (libTargetTypes.includes(target.kind[0])) {
-                targetKind = TargetType.lib;
-                cargoTestArgs += ' --lib';
-            } else {
-                return undefined;
-            }
-            const output = await getCargoTestListOutput(packageRootDirectory, log, cargoTestArgs);
-            return <ICargoTestListResult>{ output, nodeTarget: { targetType: targetKind, targetName } };
-        }));
-        resolve(parseCargoTestListResults(cargoPackage, cargoTestListResults));
-    } catch (err) {
-        reject(err);
-    }
-});
 
 const buildRootTestSuiteInfoNode = (packageTestNodes: ILoadedTestsResult[], testSuitesMap: Map<string, ITestSuiteNode>): TestSuiteInfo => {
     const testSuiteNodes: TestSuiteInfo[] = [];
@@ -66,6 +33,15 @@ const buildRootTestSuiteInfoNode = (packageTestNodes: ILoadedTestsResult[], test
     testSuitesMap.set(rootNodeId, rootTestSuiteNode);
     return rootTestInfo;
 };
+
+const loadPackageUnitTestTree = async (cargoPackage: ICargoPackage, log: Log) => new Promise<ILoadedTestsResult>(async (resolve, reject) => {
+    try {
+        const cargoTestListResults = await getCargoUnitTestListForPackage(cargoPackage, log);
+        resolve(parseCargoTestListResults(cargoPackage, cargoTestListResults));
+    } catch (err) {
+        reject(err);
+    }
+});
 
 export const loadUnitTests = async (workspaceRoot: string, log: Log): Promise<ILoadedTestsResult> => {
     try {

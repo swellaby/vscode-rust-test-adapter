@@ -14,6 +14,7 @@ import runCargoCommand from './run-cargo-command';
 suite('cargo Tests:', function () {
     setup(function () {
         this.logDebugStub = rustAdapterParamStubs.log.getDebugStub();
+        this.logWarnStub = rustAdapterParamStubs.log.getWarnStub();
     });
 
     teardown(() => {
