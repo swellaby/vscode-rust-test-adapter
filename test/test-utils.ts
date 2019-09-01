@@ -11,12 +11,17 @@ import {
 import { Log } from 'vscode-test-adapter-util';
 
 import {
-    loadedTestsResultStub,
+    binLoadedTestsResultStub,
     structuralNodesLoadedTestsResultStub,
-    testCases,
-    testCasesMapStub,
-    testSuites,
-    testSuitesMapStub
+    binTestCases,
+    binTestCasesMapStub,
+    binTestSuites,
+    binTestSuitesMapStub,
+    libLoadedTestsResultStub,
+    libTestCases,
+    libTestCasesMapStub,
+    libTestSuitesMapNoRootStub,
+    libTestSuitesMapStub
 } from './data/tree-nodes';
 
 import {
@@ -78,12 +83,17 @@ export const rustAdapterParamStubs = {
 };
 
 export const treeNodes = {
-    loadedTestsResultStub,
-    testCases,
-    testCasesMapStub,
-    testSuites,
-    testSuitesMapStub,
-    structuralNodesLoadedTestsResultStub
+    binLoadedTestsResultStub,
+    binTestCases,
+    binTestCasesMapStub,
+    binTestSuites,
+    binTestSuitesMapStub,
+    structuralNodesLoadedTestsResultStub,
+    libLoadedTestsResultStub,
+    libTestCases,
+    libTestCasesMapStub,
+    libTestSuitesMapNoRootStub,
+    libTestSuitesMapStub
 };
 
 export const cargoPackages = {

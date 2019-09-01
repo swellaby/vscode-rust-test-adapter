@@ -9,12 +9,29 @@ import { TargetType } from '../../src/enums/target-type';
 
 export const packageName = 'rust-test-sample';
 
+const libTarget: INodeTarget = {
+    targetType: TargetType.lib,
+    targetName: packageName
+};
+
+const libTestCase1 = <ITestCaseNode>{
+    id: 'rust-test-sample::rust-test-sample::lib::add',
+    packageName,
+    nodeTarget: libTarget,
+    testSpecName: 'add',
+    nodeIdPrefix: 'rust-test-sample::rust-test-sample::lib'
+};
+
+export const libTestCases = {
+    libTestCase1
+};
+
 const binTarget: INodeTarget = {
     targetType: TargetType.bin,
     targetName: packageName
 };
 
-const testCase1 = <ITestCaseNode>{
+const binTestCase1 = <ITestCaseNode>{
     id: 'rust-test-sample::rust-test-sample::bin::fail',
     packageName,
     nodeTarget: binTarget,
@@ -22,7 +39,7 @@ const testCase1 = <ITestCaseNode>{
     nodeIdPrefix: 'rust-test-sample::rust-test-sample::bin'
 };
 
-const testCase2 = <ITestCaseNode>{
+const binTestCase2 = <ITestCaseNode>{
     id: 'rust-test-sample::rust-test-sample::bin::foo::bar_second',
     packageName,
     nodeTarget: binTarget,
@@ -30,7 +47,7 @@ const testCase2 = <ITestCaseNode>{
     nodeIdPrefix: 'rust-test-sample::rust-test-sample::bin'
 };
 
-const testCase3 = <ITestCaseNode>{
+const binTestCase3 = <ITestCaseNode>{
     id: 'rust-test-sample::rust-test-sample::bin::foo::foo_tests::foo_works',
     packageName,
     nodeTarget: binTarget,
@@ -38,7 +55,7 @@ const testCase3 = <ITestCaseNode>{
     nodeIdPrefix: 'rust-test-sample::rust-test-sample::bin'
 };
 
-const testCase4 = <ITestCaseNode>{
+const binTestCase4 = <ITestCaseNode>{
     id: 'rust-test-sample::rust-test-sample::bin::pass',
     packageName,
     nodeTarget: binTarget,
@@ -46,7 +63,7 @@ const testCase4 = <ITestCaseNode>{
     nodeIdPrefix: 'rust-test-sample::rust-test-sample::bin'
 };
 
-const testCase5 = <ITestCaseNode>{
+const binTestCase5 = <ITestCaseNode>{
     id: 'rust-test-sample::rust-test-sample::bin::tests::it_works',
     packageName,
     nodeTarget: binTarget,
@@ -54,23 +71,39 @@ const testCase5 = <ITestCaseNode>{
     nodeIdPrefix: 'rust-test-sample::rust-test-sample::bin'
 };
 
-export const testCases = {
-    testCase1,
-    testCase2,
-    testCase3,
-    testCase4,
-    testCase5
+export const binTestCases = {
+    binTestCase1,
+    binTestCase2,
+    binTestCase3,
+    binTestCase4,
+    binTestCase5
 };
 
-export const testCasesMapStub: Map<string, ITestCaseNode> = new Map<string, ITestCaseNode>([
-    [ testCase1.id, testCase1 ],
-    [ testCase2.id, testCase2 ],
-    [ testCase3.id, testCase3 ],
-    [ testCase4.id, testCase4 ],
-    [ testCase5.id, testCase5 ]
+export const binTestCasesMapStub: Map<string, ITestCaseNode> = new Map<string, ITestCaseNode>([
+    [ binTestCase1.id, binTestCase1 ],
+    [ binTestCase2.id, binTestCase2 ],
+    [ binTestCase3.id, binTestCase3 ],
+    [ binTestCase4.id, binTestCase4 ],
+    [ binTestCase5.id, binTestCase5 ]
 ]);
 
-const testSuite1 = <ITestSuiteNode>{
+export const libTestCasesMapStub: Map<string, ITestCaseNode> = new Map<string, ITestCaseNode>([
+    [ libTestCase1.id, libTestCase1 ]
+]);
+
+const libTestSuite1 = <ITestSuiteNode>{
+    id: 'rust-test-sample',
+    testSpecName: '',
+    childrenNodeIds: [
+        'rust-test-sample::rust-test-sample::lib'
+    ],
+    packageName,
+    isStructuralNode: false,
+    category: 'unit',
+    targets: [ libTarget ]
+};
+
+const binTestSuite1 = <ITestSuiteNode>{
     id: 'rust-test-sample',
     testSpecName: '',
     childrenNodeIds: [
@@ -82,7 +115,7 @@ const testSuite1 = <ITestSuiteNode>{
     targets: [ binTarget ]
 };
 
-const testSuite2 = <ITestSuiteNode>{
+const binTestSuite2 = <ITestSuiteNode>{
     id: 'rust-test-sample::rust-test-sample::bin',
     testSpecName: '',
     childrenNodeIds: [],
@@ -92,7 +125,7 @@ const testSuite2 = <ITestSuiteNode>{
     targets: [ binTarget ]
 };
 
-const testSuite3 = <ITestSuiteNode>{
+const binTestSuite3 = <ITestSuiteNode>{
     id: 'rust-test-sample::rust-test-sample::bin::foo',
     testSpecName: 'foo::',
     childrenNodeIds: [],
@@ -102,7 +135,7 @@ const testSuite3 = <ITestSuiteNode>{
     targets: [ binTarget ]
 };
 
-const testSuite4 = <ITestSuiteNode>{
+const binTestSuite4 = <ITestSuiteNode>{
     id: 'rust-test-sample::rust-test-sample::bin::foo::foo_tests',
     testSpecName: 'foo::foo_tests::',
     childrenNodeIds: [],
@@ -112,7 +145,7 @@ const testSuite4 = <ITestSuiteNode>{
     targets: [ binTarget ]
 };
 
-const testSuite5 = <ITestSuiteNode>{
+const binTestSuite5 = <ITestSuiteNode>{
     id: 'rust-test-sample::rust-test-sample::bin::tests',
     testSpecName: 'tests::',
     childrenNodeIds: [],
@@ -126,61 +159,87 @@ const rootTestSuite = <ITestSuiteNode>{
     id: 'root',
     testSpecName: '',
     childrenNodeIds: [
-        testCase1.id,
-        testSuite3.id,
-        testCase4.id,
-        testSuite5.id
+        binTestCase1.id,
+        binTestSuite3.id,
+        binTestCase4.id,
+        binTestSuite5.id
     ],
     isStructuralNode: true,
     category: 'structural',
     targets: []
 };
 
-export const testSuites = {
-    testSuite1,
-    testSuite2,
-    testSuite3,
-    testSuite4,
-    testSuite5,
+export const binTestSuites = {
+    binTestSuite1,
+    binTestSuite2,
+    binTestSuite3,
+    binTestSuite4,
+    binTestSuite5,
     rootTestSuite
 };
 
-export const testSuitesMapStub: Map<string, ITestSuiteNode> = new Map<string, ITestSuiteNode>([
-    [ testSuite1.id, testSuite1 ],
-    [ testSuite2.id, testSuite2 ],
-    [ testSuite3.id, testSuite3 ],
-    [ testSuite4.id, testSuite4 ],
-    [ testSuite5.id, testSuite5 ],
+export const binTestSuitesMapNoRootStub: Map<string, ITestSuiteNode> = new Map<string, ITestSuiteNode>([
+    [ binTestSuite1.id, binTestSuite1 ],
+    [ binTestSuite2.id, binTestSuite2 ],
+    [ binTestSuite3.id, binTestSuite3 ],
+    [ binTestSuite4.id, binTestSuite4 ],
+    [ binTestSuite5.id, binTestSuite5 ]
+]);
+
+export const binTestSuitesMapStub: Map<string, ITestSuiteNode> = new Map<string, ITestSuiteNode>([
+    ...binTestSuitesMapNoRootStub,
     [ rootTestSuite.id, rootTestSuite ]
 ]);
 
-const rootTestSuiteInfo = <TestSuiteInfo>{
+export const libTestSuitesMapNoRootStub: Map<string, ITestSuiteNode> = new Map<string, ITestSuiteNode>([
+    [ libTestSuite1.id, libTestSuite1 ]
+]);
+
+export const libTestSuitesMapStub: Map<string, ITestSuiteNode> = new Map<string, ITestSuiteNode>([
+    ...libTestSuitesMapNoRootStub,
+    [ rootTestSuite.id, rootTestSuite ]
+]);
+
+export const libRootTestSuiteInfo = <TestSuiteInfo> {
     id: rootTestSuite.id,
     label: 'rust',
     type: 'suite',
     children: [
         {
-            id: testCase1.id,
-            label: testCase1.testSpecName,
+            id: libTestCase1.id,
+            label: libTestCase1.testSpecName,
+            type: 'test'
+        }
+    ]
+};
+
+const binRootTestSuiteInfo = <TestSuiteInfo>{
+    id: rootTestSuite.id,
+    label: 'rust',
+    type: 'suite',
+    children: [
+        {
+            id: binTestCase1.id,
+            label: binTestCase1.testSpecName,
             type: 'test'
         },
         {
-            id: testSuite3.id,
+            id: binTestSuite3.id,
             label: 'foo',
             type: 'suite',
             children: [
                 {
-                    id: testCase2.id,
+                    id: binTestCase2.id,
                     label: 'bar_second',
                     type: 'test'
                 },
                 {
-                    id: testSuite4.id,
+                    id: binTestSuite4.id,
                     label: 'foo_tests',
                     type: 'suite',
                     children: [
                         {
-                            id: testCase3.id,
+                            id: binTestCase3.id,
                             label: 'foo_works',
                             type: 'test'
                         }
@@ -189,17 +248,17 @@ const rootTestSuiteInfo = <TestSuiteInfo>{
             ]
         },
         {
-            id: testCase4.id,
+            id: binTestCase4.id,
             label: 'pass',
             type: 'test'
         },
         {
-            id: testSuite5.id,
+            id: binTestSuite5.id,
             label: 'tests',
             type: 'suite',
             children: [
                 {
-                    id: testCase5.id,
+                    id: binTestCase5.id,
                     label: 'it_works',
                     type: 'test'
                 }
@@ -208,10 +267,16 @@ const rootTestSuiteInfo = <TestSuiteInfo>{
     ]
 };
 
-export const loadedTestsResultStub = <ILoadedTestsResult>{
-    rootTestSuite: rootTestSuiteInfo,
-    testCasesMap: testCasesMapStub,
-    testSuitesMap: testSuitesMapStub
+export const binLoadedTestsResultStub = <ILoadedTestsResult>{
+    rootTestSuite: binRootTestSuiteInfo,
+    testCasesMap: binTestCasesMapStub,
+    testSuitesMap: binTestSuitesMapStub
+};
+
+export const libLoadedTestsResultStub = <ILoadedTestsResult>{
+    rootTestSuite: binRootTestSuiteInfo,
+    testCasesMap: libTestCasesMapStub,
+    testSuitesMap: libTestSuitesMapStub
 };
 
 const unitTestSuiteInfo = <ITestSuiteNode>{
@@ -225,7 +290,7 @@ const unitTestSuiteInfo = <ITestSuiteNode>{
 
 const structuralNodesRootTestSuite: ITestSuiteNode = JSON.parse(JSON.stringify(rootTestSuite));
 structuralNodesRootTestSuite.childrenNodeIds = [unitTestSuiteInfo.id];
-const structuralNodesSuitesMap = new Map(testSuitesMapStub);
+const structuralNodesSuitesMap = new Map(binTestSuitesMapStub);
 structuralNodesSuitesMap.set(unitTestSuiteInfo.id, unitTestSuiteInfo);
 structuralNodesSuitesMap.set(rootTestSuite.id, structuralNodesRootTestSuite);
 const structuralNodeRootTestSuiteInfo = <TestSuiteInfo>{
@@ -237,13 +302,13 @@ const structuralNodeRootTestSuiteInfo = <TestSuiteInfo>{
             id: unitTestSuiteInfo.id,
             label: unitTestSuiteInfo.testSpecName,
             type: 'suite',
-            children: JSON.parse(JSON.stringify(rootTestSuiteInfo.children))
+            children: JSON.parse(JSON.stringify(binRootTestSuiteInfo.children))
         }
     ]
 };
 
 export const structuralNodesLoadedTestsResultStub = <ILoadedTestsResult>{
     rootTestSuite: structuralNodeRootTestSuiteInfo,
-    testCasesMap: testCasesMapStub,
+    testCasesMap: binTestCasesMapStub,
     testSuitesMap: structuralNodesSuitesMap
 };

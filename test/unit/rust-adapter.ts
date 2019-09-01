@@ -20,19 +20,20 @@ import {
 } from '../test-utils';
 import { ITestCaseNode } from '../../src/interfaces/test-case-node';
 import { ITestSuiteNode } from '../../src/interfaces/test-suite-node';
+import { IConfiguration } from '../../src/interfaces/configuration';
 
 suite('RustAdapter Tests:', () => {
     let logInfoStub: Sinon.SinonStub;
     let logErrorStub: Sinon.SinonStub;
     let testsEmitterFireStub: Sinon.SinonStub;
     let testStatesEmitterFireStub: Sinon.SinonStub;
-    let loadUnitTestsStub: Sinon.SinonStub;
+    let loadWorkspaceTestsStub: Sinon.SinonStub;
     let rustAdapter: RustAdapter;
     const workspaceRootDirectoryPath = '/usr/me/rusty-hook';
     const {
-        loadedTestsResultStub,
-        testCases,
-        testSuites,
+        binLoadedTestsResultStub,
+        binTestCases,
+        binTestSuites,
         structuralNodesLoadedTestsResultStub
     } = treeNodes;
 
@@ -47,7 +48,9 @@ suite('RustAdapter Tests:', () => {
             testStatesEmitterStub: testStatesEmitter,
             autoRunEmitterStub: autoRunEmitter
         } = rustAdapterParams;
-        loadUnitTestsStub = Sinon.stub(testLoader, 'loadUnitTests').withArgs(workspaceRootDirectoryPath, log).callsFake(() => Promise.resolve(loadedTestsResultStub));
+        loadWorkspaceTestsStub = Sinon.stub(testLoader, 'loadWorkspaceTests')
+            .withArgs(workspaceRootDirectoryPath, log, <IConfiguration>{ loadUnitTests: true })
+            .callsFake(() => Promise.resolve(binLoadedTestsResultStub));
         rustAdapter = new RustAdapter(workspaceRootDirectoryPath, log, testsEmitter, testStatesEmitter, autoRunEmitter);
     });
 
@@ -65,7 +68,7 @@ suite('RustAdapter Tests:', () => {
     suite('load()', () => {
         test('Should gracefully handle exception thrown on load', async () => {
             const err = new Error('crashed');
-            loadUnitTestsStub.throws(() => err);
+            loadWorkspaceTestsStub.throws(() => err);
             await rustAdapter.load();
             assert.isTrue(logInfoStub.calledWithExactly('Loading Rust Tests'));
             assert.isTrue(testsEmitterFireStub.calledWithExactly(<TestLoadStartedEvent>{ type: 'started' }));
@@ -74,7 +77,7 @@ suite('RustAdapter Tests:', () => {
         });
 
         test('Should correctly handle no tests found scenario', async () => {
-            loadUnitTestsStub.callsFake(() => undefined);
+            loadWorkspaceTestsStub.callsFake(() => undefined);
             await rustAdapter.load();
             assert.isTrue(logInfoStub.calledWithExactly('No unit tests found'));
             assert.isTrue(testsEmitterFireStub.calledWithExactly(<TestLoadFinishedEvent>{ type: 'finished' }));
@@ -84,7 +87,7 @@ suite('RustAdapter Tests:', () => {
             await rustAdapter.load();
             assert.isTrue(testsEmitterFireStub.calledWithExactly(<TestLoadFinishedEvent>{
                 type: 'finished',
-                suite: loadedTestsResultStub.rootTestSuite
+                suite: binLoadedTestsResultStub.rootTestSuite
             }));
         });
     });
@@ -92,20 +95,20 @@ suite('RustAdapter Tests:', () => {
     suite('run()', () => {
         let runTestCaseStub: Sinon.SinonStub;
         let runTestSuiteStub: Sinon.SinonStub;
-        const testCase1 = testCases.testCase1;
+        const testCase1 = binTestCases.binTestCase1;
         const testCase1Id = testCase1.id;
-        const testCase4 = testCases.testCase4;
+        const testCase4 = binTestCases.binTestCase4;
         const testCase4Id = testCase4.id;
         const testCase1Result = <TestEvent>{
             test: testCase1Id,
             state: 'passed'
         };
         const testCase2Result = <TestEvent>{
-            test: testCases.testCase2.id,
+            test: binTestCases.binTestCase2.id,
             state: 'passed'
         };
         const testCase3Result = <TestEvent>{
-            test: testCases.testCase3.id,
+            test: binTestCases.binTestCase3.id,
             state: 'passed'
         };
         const testCase4Result = <TestEvent>{
@@ -113,11 +116,11 @@ suite('RustAdapter Tests:', () => {
             state: 'failed'
         };
         const testCase5Result = <TestEvent>{
-            test: testCases.testCase5.id,
+            test: binTestCases.binTestCase5.id,
             state: 'passed'
         };
-        const testSuite3 = testSuites.testSuite3;
-        const testSuite5 = testSuites.testSuite5;
+        const testSuite3 = binTestSuites.binTestSuite3;
+        const testSuite5 = binTestSuites.binTestSuite5;
         const testSuite3Results = [ testCase2Result, testCase3Result ];
         const testSuite5Results = [ testCase5Result ];
 
@@ -167,7 +170,7 @@ suite('RustAdapter Tests:', () => {
         });
 
         test('Should correctly handle root-level run all with structural node', async () => {
-            loadUnitTestsStub.callsFake(() => Promise.resolve(structuralNodesLoadedTestsResultStub));
+            loadWorkspaceTestsStub.callsFake(() => Promise.resolve(structuralNodesLoadedTestsResultStub));
             await rustAdapter.load();
             const nodeIds = [ 'root' ];
             setResultForTestCase(testCase1, testCase1Result);

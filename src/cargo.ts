@@ -122,7 +122,7 @@ export const getCargoTestListForPackage = async (
         // the list twice vs. using reduce and invoking the cargo commands sequentially.
         const cargoTestListResults = await Promise.all(targets.map(async target => {
             const nodeTarget = getCargoNodeTarget(target, log);
-            if (!allowedTargetTypes.includes(nodeTarget.targetType)) {
+            if (!nodeTarget || !allowedTargetTypes.includes(nodeTarget.targetType)) {
                 return undefined;
             }
             const filter = getCargoPackageTargetFilter(packageName, nodeTarget);

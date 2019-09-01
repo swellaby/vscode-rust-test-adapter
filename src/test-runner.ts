@@ -98,7 +98,7 @@ export const runTestSuite = async (testSuiteNode: ITestSuiteNode, workspaceRootD
 
         const results = await Promise.all(testSuiteNode.targets.map(async target => {
             const targetFilter = buildTargetFilter(target);
-            const testFilter = `${targetFilter} ${specName}`;
+            const testFilter = `${targetFilter} ${specName} --no-fail-fast`;
             const testIdPrefix = `${packageName}::${target.targetName}::${target.targetType}`;
             const output = await runCargoTestCommand(packageName, workspaceRootDir, testFilter);
             return parseTestCaseResultOutput(testIdPrefix, output);

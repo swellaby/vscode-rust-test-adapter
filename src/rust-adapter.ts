@@ -9,7 +9,8 @@ import {
     TestRunFinishedEvent
 } from 'vscode-test-adapter-api';
 import { Log } from 'vscode-test-adapter-util';
-import { loadUnitTests } from './test-loader';
+import { loadWorkspaceTests } from './test-loader';
+import { IConfiguration } from './interfaces/configuration';
 import { IDisposable } from './interfaces/disposable';
 import { ITargetRunNodes } from './interfaces/target-run-nodes';
 import { runTestCase, runTestSuite } from './test-runner';
@@ -50,7 +51,7 @@ export class RustAdapter implements TestAdapter {
         this.testsEmitter.fire(<TestLoadStartedEvent>{ type: 'started' });
 
         try {
-            const loadedTests = await loadUnitTests(this.workspaceRootDirectoryPath, this.log);
+            const loadedTests = await loadWorkspaceTests(this.workspaceRootDirectoryPath, this.log, <IConfiguration>{ loadUnitTests: true });
 
             if (!loadedTests) {
                 this.log.info('No unit tests found');
