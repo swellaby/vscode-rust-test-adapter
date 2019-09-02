@@ -278,7 +278,7 @@ export const binLoadedTestsResultStub = <ILoadedTestsResult>{
 };
 
 export const libLoadedTestsResultStub = <ILoadedTestsResult>{
-    rootTestSuite: binRootTestSuiteInfo,
+    rootTestSuite: libRootTestSuiteInfo,
     testCasesMap: libTestCasesMapStub,
     testSuitesMap: libTestSuitesMapStub
 };

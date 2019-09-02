@@ -1,6 +1,4 @@
 'use strict';
-// tslint:disable
-// eslint-disable
 
 import { assert } from 'chai';
 import * as Sinon from 'sinon';
@@ -33,9 +31,7 @@ export default function suite() {
         type: 'suite',
         children: []
     };
-    const {
-        binLoadedTestsResultStub,
-    } = treeNodes;
+    const { binLoadedTestsResultStub } = treeNodes;
 
     setup(() => {
         createEmptyTestSuiteNodeStub = Sinon.stub(utils, 'createEmptyTestSuiteNode').callsFake(() => emptyTestSuiteNode);

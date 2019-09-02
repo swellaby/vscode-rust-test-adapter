@@ -1,6 +1,4 @@
 'use strict';
-// tslint:disable
-// eslint-disable
 
 import { assert } from 'chai';
 import * as Sinon from 'sinon';
@@ -11,6 +9,8 @@ import { ILoadedTestsResult } from '../../../src/interfaces/loaded-tests-result'
 import { ITestCaseNode } from '../../../src/interfaces/test-case-node';
 import { ITestSuiteNode } from '../../../src/interfaces/test-suite-node';
 import { binLoadedTestsResultStub, libLoadedTestsResultStub } from '../../data/tree-nodes';
+import { createEmptyTestSuiteNode, createTestSuiteInfo } from '../../../src/utils';
+import { NodeCategory } from '../../../src/enums/node-category';
 
 // tslint:disable-next-line:max-func-body-length
 export default function suite() {
@@ -20,25 +20,28 @@ export default function suite() {
         binTestSuitesMapStub,
         binTestCasesMapStub,
         libTestCasesMapStub,
-        libTestSuitesMapStub,
-        libRootTestSuiteInfo
+        libTestSuitesMapStub
     } = treeNodes;
-    const {
-        structuralNodesLoadedTestsResultStub: { rootTestSuite },
-        binTestSuites: { binTestSuite1 },
-        libTestSuites: { libTestSuite1 },
-    } = treeNodes;
-    const rootNodeInfo = { testSuiteInfo: rootTestSuite, testSuiteNode: binTestSuite1 }
+    const { structuralNodesLoadedTestsResultStub: { rootTestSuite } } = treeNodes;
+    const expRootNodeId = 'root';
+    const unitTestSuiteInfo = createTestSuiteInfo('unit', 'unit');
+    const integrationTestSuiteInfo = createTestSuiteInfo('integration', 'integration');
+    const expRootNodes = [ unitTestSuiteInfo, integrationTestSuiteInfo ];
+    const rootTestSuiteNode = createEmptyTestSuiteNode(expRootNodeId, null, true, NodeCategory.structural);
+    const unitTestSuiteNode = createEmptyTestSuiteNode('unit', null, true, NodeCategory.structural);
+    const integrationTestSuiteNode = createEmptyTestSuiteNode('integration', null, true, NodeCategory.structural);
+    rootTestSuiteNode.childrenNodeIds = rootTestSuite.children.map(c => c.id);
+    const rootNodeInfo = { testSuiteInfo: rootTestSuite, testSuiteNode: rootTestSuiteNode };
     const workspaceResults = [
         {
             results: [ binLoadedTestsResultStub ],
-            rootNode: libRootTestSuiteInfo,
-            testSuiteNode: binTestSuite1
+            rootNode: unitTestSuiteInfo,
+            testSuiteNode: unitTestSuiteNode
         },
         {
             results: [ libLoadedTestsResultStub ],
-            rootNode: libRootTestSuiteInfo,
-            testSuiteNode: libTestSuite1
+            rootNode: integrationTestSuiteInfo,
+            testSuiteNode: integrationTestSuiteNode
         }
     ];
 
@@ -49,6 +52,8 @@ export default function suite() {
     test('Should return correct load result for workspace', () => {
         const testSuitesMap = new Map<string, ITestSuiteNode>([ ...binTestSuitesMapStub, ...libTestSuitesMapStub ]);
         testSuitesMap.set(rootNodeInfo.testSuiteNode.id, rootNodeInfo.testSuiteNode);
+        testSuitesMap.set(unitTestSuiteNode.id, unitTestSuiteNode);
+        testSuitesMap.set(integrationTestSuiteNode.id, integrationTestSuiteNode);
         const expected = <ILoadedTestsResult> {
             rootTestSuite,
             testCasesMap: new Map<string, ITestCaseNode>([ ...binTestCasesMapStub, ...libTestCasesMapStub ]),
@@ -57,7 +62,6 @@ export default function suite() {
 
         const actual = buildWorkspaceLoadedTestsResult(workspaceResults);
         assert.deepEqual(actual, expected);
-        const expRootNodes = workspaceResults.map(r => r.rootNode);
-        assert.isTrue(buildRootNodeInfoStub.calledWithExactly(expRootNodes, 'root', 'rust'));
+        assert.isTrue(buildRootNodeInfoStub.calledWithExactly(expRootNodes, expRootNodeId, 'rust'));
     });
 }
