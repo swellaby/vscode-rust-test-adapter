@@ -8,6 +8,7 @@ import { ICargoPackage } from './interfaces/cargo-package';
 import { ICargoPackageTarget } from './interfaces/cargo-package-target';
 import { TargetType } from './enums/target-type';
 import { INodeTarget } from './interfaces/node-target';
+import { ICargoTestExecutionParameters } from './interfaces/cargo-test-execution-parameters';
 
 // https://doc.rust-lang.org/reference/linkage.html
 // Other types of various lib targets that may be listed in the Cargo metadata.
@@ -151,4 +152,32 @@ export const getCargoUnitTestListForPackage = async (
         unitTestTargetTypes,
         additionalArgs
     );
+};
+
+export const runCargoTestsForPackageTargetWithFormat = async (
+    params: ICargoTestExecutionParameters,
+    format: string,
+    maxBuffer: number = 200 * 1024
+) => new Promise<string>(async (resolve, reject) => {
+    const cargoSubCommand = 'test';
+    const { packageName, nodeTarget, targetWorkspace, cargoSubCommandArgs, testBinaryArgs, log } = params;
+    try {
+        const filter = getCargoPackageTargetFilter(packageName, nodeTarget);
+        const subArgs = `${cargoSubCommandArgs ? cargoSubCommandArgs : ''}`;
+        const binaryArgs = `${testBinaryArgs ? ` ${testBinaryArgs}` : ''}`;
+        const args = `${filter}${subArgs} -- --format ${format}${binaryArgs}`;
+        const stdout = await runCargoCommand(cargoSubCommand, args, targetWorkspace, maxBuffer, true);
+        resolve(stdout);
+    } catch (err) {
+        const baseErrorMessage = 'Fatal error while attempting to run tests';
+        log.debug(`${baseErrorMessage}. Details: ${err}`);
+        reject(new Error(baseErrorMessage));
+    }
+});
+
+export const runCargoTestsForPackageTargetWithPrettyFormat = async (
+    params: ICargoTestExecutionParameters,
+    maxBuffer: number = 200 * 1024
+): Promise<string> => {
+    return runCargoTestsForPackageTargetWithFormat(params, 'pretty', maxBuffer);
 };

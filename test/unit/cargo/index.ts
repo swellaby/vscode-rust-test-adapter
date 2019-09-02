@@ -10,6 +10,7 @@ import getCargoTestListForPackage from './get-cargo-test-list-for-package';
 import getCargoTestListOutput from './get-cargo-test-list-output';
 import getCargoUnitTestListForPackage from './get-cargo-unit-test-list-for-package';
 import runCargoCommand from './run-cargo-command';
+import runCargoTestsForPackageTargetWithFormat from './run-cargo-tests-for-package-target-with-format';
 
 suite('cargo Tests:', function () {
     setup(function () {
@@ -28,4 +29,5 @@ suite('cargo Tests:', function () {
     suite('getCargoTestListOutput()', getCargoTestListOutput.bind(this));
     suite('getCargoUnitTestListForPackage()', getCargoUnitTestListForPackage.bind(this));
     suite('runCargoCommand()', runCargoCommand.bind(this));
+    suite('runCargoTestsForPackageTargetWithFormat()', runCargoTestsForPackageTargetWithFormat.bind(this));
 });
