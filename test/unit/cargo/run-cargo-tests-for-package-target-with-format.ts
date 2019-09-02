@@ -29,7 +29,7 @@ export default function suite() {
         nodeTarget,
         targetWorkspace: workspaceRoot,
         log: logStub
-    }
+    };
 
     setup(function () {
         runCargoCommandStub = Sinon.stub(cargo, 'runCargoCommand');
