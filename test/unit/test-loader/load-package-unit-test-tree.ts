@@ -35,7 +35,7 @@ export default function suite() {
             assert.fail('Should have thrown');
         } catch (err) {
             const baseErrorMessage = `Fatal error while attempting to load unit tests for package: ${swansonLibPackage.name}`;
-            assert.isTrue(logDebugStub.calledWithExactly(`${baseErrorMessage}. Details: ${expErr}`))
+            assert.isTrue(logDebugStub.calledWithExactly(`${baseErrorMessage}. Details: ${expErr}`));
             assert.deepEqual(err, expErr);
         }
     });
