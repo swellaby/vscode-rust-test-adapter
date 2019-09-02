@@ -28,8 +28,9 @@ export default function suite() {
             await cargo.getCargoMetadata(workspaceRoot, logStub);
             assert.fail('Should have thrown');
         } catch (err) {
-            assert.isTrue(logDebugStub.calledWith(error));
-            assert.deepEqual(err.message, 'Unable to parse cargo metadata output');
+            const baseError = 'Unable to parse cargo metadata output';
+            assert.isTrue(logDebugStub.calledWith(`${baseError}. Details: ${error}`));
+            assert.deepEqual(err.message, baseError);
         }
     });
 

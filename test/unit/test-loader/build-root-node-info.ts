@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import * as Sinon from 'sinon';
 import { TestSuiteInfo } from 'vscode-test-adapter-api';
 
-import { buildRootTestSuiteInfoNode } from '../../../src/test-loader';
+import { buildRootNodeInfo } from '../../../src/test-loader';
 import * as utils from '../../../src/utils';
 import { treeNodes } from '../../test-utils';
 import { NodeCategory } from '../../../src/enums/node-category';
@@ -35,22 +35,21 @@ export default function suite() {
     };
     const {
         binLoadedTestsResultStub,
-        binTestSuitesMapStub
     } = treeNodes;
 
-    // setup(() => {
-    //     createEmptyTestSuiteNodeStub = Sinon.stub(utils, 'createEmptyTestSuiteNode').callsFake(() => emptyTestSuiteNode);
-    //     createTestSuiteInfoStub = Sinon.stub(utils, 'createTestSuiteInfo').callsFake(() => rootTestSuiteInfo);
-    // });
+    setup(() => {
+        createEmptyTestSuiteNodeStub = Sinon.stub(utils, 'createEmptyTestSuiteNode').callsFake(() => emptyTestSuiteNode);
+        createTestSuiteInfoStub = Sinon.stub(utils, 'createTestSuiteInfo').callsFake(() => rootTestSuiteInfo);
+    });
 
-    // test('Should create correct tree node objects', () => {
-    //     buildRootTestSuiteInfoNode([binLoadedTestsResultStub], binTestSuitesMapStub, rootNodeId, rootNodeLabel);
-    //     assert.isTrue(createEmptyTestSuiteNodeStub.calledWithExactly(
-    //         rootNodeId,
-    //         null,
-    //         true,
-    //         NodeCategory.structural
-    //     ));
-    //     assert.isTrue(createTestSuiteInfoStub.calledWithExactly(rootNodeId, rootNodeLabel));
-    // });
+    test('Should create correct tree node objects', () => {
+        buildRootNodeInfo([binLoadedTestsResultStub.rootTestSuite], rootNodeId, rootNodeLabel);
+        assert.isTrue(createEmptyTestSuiteNodeStub.calledWithExactly(
+            rootNodeId,
+            null,
+            true,
+            NodeCategory.structural
+        ));
+        assert.isTrue(createTestSuiteInfoStub.calledWithExactly(rootNodeId, rootNodeLabel));
+    });
 }

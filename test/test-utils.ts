@@ -10,19 +10,7 @@ import {
 } from 'vscode-test-adapter-api';
 import { Log } from 'vscode-test-adapter-util';
 
-import {
-    binLoadedTestsResultStub,
-    structuralNodesLoadedTestsResultStub,
-    binTestCases,
-    binTestCasesMapStub,
-    binTestSuites,
-    binTestSuitesMapStub,
-    libLoadedTestsResultStub,
-    libTestCases,
-    libTestCasesMapStub,
-    libTestSuitesMapNoRootStub,
-    libTestSuitesMapStub
-} from './data/tree-nodes';
+import * as dataTreeNodes from './data/tree-nodes';
 
 import {
     swansonLibPackage
@@ -82,19 +70,7 @@ export const rustAdapterParamStubs = {
     }
 };
 
-export const treeNodes = {
-    binLoadedTestsResultStub,
-    binTestCases,
-    binTestCasesMapStub,
-    binTestSuites,
-    binTestSuitesMapStub,
-    structuralNodesLoadedTestsResultStub,
-    libLoadedTestsResultStub,
-    libTestCases,
-    libTestCasesMapStub,
-    libTestSuitesMapNoRootStub,
-    libTestSuitesMapStub
-};
+export const treeNodes = dataTreeNodes;
 
 export const cargoPackages = {
     swansonLibPackage

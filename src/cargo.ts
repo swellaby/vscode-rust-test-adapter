@@ -52,8 +52,9 @@ export const getCargoMetadata = async (
         const cargoMetadata: ICargoMetadata = JSON.parse(stdout);
         resolve(cargoMetadata);
     } catch (err) {
-        log.debug(err);
-        reject(new Error('Unable to parse cargo metadata output'));
+        const baseErrorMessage = 'Unable to parse cargo metadata output';
+        log.debug(`${baseErrorMessage}. Details: ${err}`);
+        reject(new Error(baseErrorMessage));
     }
 });
 
@@ -69,8 +70,9 @@ export const getCargoTestListOutput = async (
         const stdout = await runCargoCommand(cargoSubCommand, args, targetWorkspace, maxBuffer);
         resolve(stdout);
     } catch (err) {
-        log.debug(err);
-        reject(new Error('Unable to retrieve enumeration of tests'));
+        const baseErrorMessage = 'Unable to retrieve enumeration of tests';
+        log.debug(`${baseErrorMessage}. Details: ${err}`);
+        reject(new Error(baseErrorMessage));
     }
 });
 
@@ -132,8 +134,9 @@ export const getCargoTestListForPackage = async (
         }));
         resolve(cargoTestListResults.filter(Boolean));
     } catch (err) {
-        log.debug(err);
-        reject(new Error(`Failed to load tests for package: ${packageName}.`));
+        const baseErrorMessage = `Failed to load tests for package: ${packageName}.`;
+        log.debug(`${baseErrorMessage}. Details: ${err}`);
+        reject(new Error(baseErrorMessage));
     }
 });
 

@@ -9,6 +9,7 @@
     "dylib",
     "hbenl",
     "libc",
+    "logpanel",
     "mocharc",
     "nias",
     "opensource",

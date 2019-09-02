@@ -24,6 +24,7 @@ import { IConfiguration } from '../../src/interfaces/configuration';
 
 suite('RustAdapter Tests:', () => {
     let logInfoStub: Sinon.SinonStub;
+    let logWarnStub: Sinon.SinonStub;
     let logErrorStub: Sinon.SinonStub;
     let testsEmitterFireStub: Sinon.SinonStub;
     let testStatesEmitterFireStub: Sinon.SinonStub;
@@ -39,6 +40,7 @@ suite('RustAdapter Tests:', () => {
 
     setup(() => {
         logInfoStub = rustAdapterParamStubs.log.getInfoStub();
+        logWarnStub = rustAdapterParamStubs.log.getWarnStub();
         logErrorStub = rustAdapterParamStubs.log.getErrorStub();
         testsEmitterFireStub = Sinon.stub(rustAdapterParams.testsEmitterStub, 'fire');
         testStatesEmitterFireStub = Sinon.stub(rustAdapterParams.testStatesEmitterStub, 'fire');
@@ -79,7 +81,7 @@ suite('RustAdapter Tests:', () => {
         test('Should correctly handle no tests found scenario', async () => {
             loadWorkspaceTestsStub.callsFake(() => undefined);
             await rustAdapter.load();
-            assert.isTrue(logInfoStub.calledWithExactly('No unit tests found'));
+            assert.isTrue(logWarnStub.calledWithExactly('No tests found in workspace'));
             assert.isTrue(testsEmitterFireStub.calledWithExactly(<TestLoadFinishedEvent>{ type: 'finished' }));
         });
 

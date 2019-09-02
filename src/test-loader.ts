@@ -20,7 +20,7 @@ interface ITestTypeLoadedTestsResult {
     testSuiteNode: ITestSuiteNode;
 }
 
-export const buildRootTestSuiteInfoNode = (
+export const buildRootNodeInfo = (
     testSuiteNodes: TestSuiteInfo[],
     rootNodeId: string,
     rootNodeLabel: string
@@ -64,40 +64,33 @@ export const loadUnitTests = async (
     log: Log
 ): Promise<ITestTypeLoadedTestsResult> => {
     const results = await loadTestsForPackages(packages, log, loadPackageUnitTestTree);
-    if (results.length === 0) {
+    if (!results || results.length === 0) {
         return null;
     }
-    const { testSuiteInfo: rootNode, testSuiteNode } = buildRootTestSuiteInfoNode(results.map(r => r.rootTestSuite), 'unit', 'unit');
+    const { testSuiteInfo: rootNode, testSuiteNode } = buildRootNodeInfo(results.map(r => r.rootTestSuite), 'unit', 'unit');
     return { rootNode, results, testSuiteNode };
 };
 
 export const loadDocumentationTests = async (
     _packages: ICargoPackage[],
     _log: Log
-): Promise<ILoadedTestsResult> => {
+): Promise<ITestTypeLoadedTestsResult> => {
     return Promise.reject(new Error('Not yet implemented.'));
 };
 
 export const loadIntegrationTests = async (
     _packages: ICargoPackage[],
     _log: Log
-): Promise<ILoadedTestsResult> => {
+): Promise<ITestTypeLoadedTestsResult> => {
     return Promise.reject(new Error('Not yet implemented.'));
 };
 
-export const buildWorkspaceLoadedTestsResult = (workspaceTestResults: ITestTypeLoadedTestsResult[]): ILoadedTestsResult => {
-    if (!workspaceTestResults || workspaceTestResults.length === 0) {
-        return null;
-    }
-    const loadedTestsResults = workspaceTestResults.filter(Boolean);
-    if (loadedTestsResults.length === 0) {
-        return null;
-    }
+export const aggregateWorkspaceTestsResults = (workspaceTestResults: ITestTypeLoadedTestsResult[]): ILoadedTestsResult => {
     let testSuitesMap = new Map<string, ITestSuiteNode>();
     const testSuitesMapIterators: [string, ITestSuiteNode][] = [];
     const testCasesMapIterators: [string, ITestCaseNode][] = [];
     const rootTestInfoNodes: TestSuiteInfo[] = [];
-    loadedTestsResults.forEach(result => {
+    workspaceTestResults.forEach(result => {
         rootTestInfoNodes.push(result.rootNode);
         testSuitesMap.set(result.testSuiteNode.id, result.testSuiteNode);
         result.results.map(r => {
@@ -107,35 +100,79 @@ export const buildWorkspaceLoadedTestsResult = (workspaceTestResults: ITestTypeL
     });
     testSuitesMap = new Map<string, ITestSuiteNode>([...testSuitesMap, ...testSuitesMapIterators]);
     const testCasesMap = new Map<string, ITestCaseNode>(testCasesMapIterators);
-    const { testSuiteInfo, testSuiteNode } = buildRootTestSuiteInfoNode(rootTestInfoNodes, 'root', 'rust');
+    const { testSuiteInfo, testSuiteNode } = buildRootNodeInfo(rootTestInfoNodes, 'root', 'rust');
     testSuitesMap.set(testSuiteNode.id, testSuiteNode);
     return { rootTestSuite: testSuiteInfo, testSuitesMap, testCasesMap };
 };
 
-// eslint-disable-next-line max-statements
+/**
+ * Builds the final result object containing the loaded tests for the workspace.
+ *
+ * @param {ITestTypeLoadedTestsResult[]} workspaceTestResults - The results of loading tests for the workspace
+ *
+ * @private - Only exposed for unit testing purposes
+ * @returns {ILoadedTestsResult|null} - Returns null on empty/invalid input.
+ */
+export const buildWorkspaceLoadedTestsResult = (workspaceTestResults: ITestTypeLoadedTestsResult[]): ILoadedTestsResult => {
+    if (!workspaceTestResults || workspaceTestResults.length === 0) {
+        return null;
+    }
+    const loadedTestsResults = workspaceTestResults.filter(Boolean);
+    if (loadedTestsResults.length === 0) {
+        return null;
+    }
+    return aggregateWorkspaceTestsResults(loadedTestsResults);
+};
+
+/**
+ * Retrieves the test loader functions to use based on the provided configuration.
+ *
+ * @param {ICargoPackage[]} packages - The cargo packages in the workspace.
+ * @param {Log} log - The logger.
+ * @param {IConfiguration} config - The configuration options.
+ *
+ * @private - Only exposed for unit testing purposes
+ * @returns {Promise<ITestTypeLoadedTestsResult>[]}
+ */
+export const getTestLoaders = (packages: ICargoPackage[], log: Log, config: IConfiguration): Promise<ITestTypeLoadedTestsResult>[] => {
+    const promises: Promise<ITestTypeLoadedTestsResult>[] = [];
+    if (config.loadUnitTests) {
+        promises.push(loadUnitTests(packages, log));
+    }
+    if (config.loadDocumentationTests) {
+        promises.push(loadDocumentationTests(packages, log));
+    }
+    if (config.loadIntegrationTests) {
+        promises.push(loadIntegrationTests(packages, log));
+    }
+    return promises;
+};
+
+/**
+ * Loads the all the tests in the specified workspace based on the specified configuration.
+ *
+ * @param {ICargoPackage[]} packages - The cargo packages in the workspace.
+ * @param {Log} log - The logger.
+ * @param {IConfiguration} config - The configuration options.
+ *
+ * @returns {Promise<ILoadedTestsResult}
+ */
 export const loadWorkspaceTests = async (
     workspaceRoot: string,
     log: Log,
     config: IConfiguration
 ): Promise<ILoadedTestsResult> => {
     try {
-        const packages = (await getCargoMetadata(workspaceRoot, log)).packages;
-        if (packages.length === 0) {
+        const { packages } = await getCargoMetadata(workspaceRoot, log);
+        if (!packages || packages.length === 0) {
             return Promise.resolve(null);
         }
-        const promises = [];
-        if (config.loadUnitTests) {
-            promises.push(loadUnitTests(packages, log));
-        }
-        if (config.loadDocumentationTests) {
-            promises.push(loadDocumentationTests(packages, log));
-        }
-        if (config.loadIntegrationTests) {
-            promises.push(loadIntegrationTests(packages, log));
-        }
-        const workspaceTestResults: ITestTypeLoadedTestsResult[] = await Promise.all(promises);
+        const testLoaderPromises = getTestLoaders(packages, log, config);
+        const workspaceTestResults: ITestTypeLoadedTestsResult[] = await Promise.all(testLoaderPromises);
         return buildWorkspaceLoadedTestsResult(workspaceTestResults);
     } catch (err) {
+        const baseErrorMessage = `Fatal error while attempting to load tests for workspace ${workspaceRoot}`;
+        log.debug(`${baseErrorMessage}. Details: ${err}`);
         return Promise.reject(err);
     }
 };

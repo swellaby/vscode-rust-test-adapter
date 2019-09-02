@@ -178,6 +178,10 @@ export const binTestSuites = {
     rootTestSuite
 };
 
+export const libTestSuites = {
+    libTestSuite1
+};
+
 export const binTestSuitesMapNoRootStub: Map<string, ITestSuiteNode> = new Map<string, ITestSuiteNode>([
     [ binTestSuite1.id, binTestSuite1 ],
     [ binTestSuite2.id, binTestSuite2 ],

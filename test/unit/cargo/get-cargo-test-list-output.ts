@@ -25,8 +25,9 @@ export default function suite() {
             await cargo.getCargoTestListOutput(workspaceRoot, logStub);
             assert.fail('Should have thrown');
         } catch (err) {
-            assert.isTrue(logDebugStub.calledWith(error));
-            assert.deepEqual(err.message, 'Unable to retrieve enumeration of tests');
+            const baseError = 'Unable to retrieve enumeration of tests';
+            assert.isTrue(logDebugStub.calledWith(`${baseError}. Details: ${error}`));
+            assert.deepEqual(err.message, baseError);
         }
     });
 

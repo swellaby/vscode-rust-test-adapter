@@ -65,8 +65,9 @@ export default function suite() {
             await cargo.getCargoTestListForPackage(swansonLibPackage, logStub, allowedTargetTypes);
             assert.fail('Should have thrown');
         } catch (err) {
-            assert.isTrue(logDebugStub.calledWith(error));
-            assert.deepEqual(err.message, `Failed to load tests for package: ${swansonLibPackage.name}.`);
+            const baseError = `Failed to load tests for package: ${swansonLibPackage.name}.`;
+            assert.isTrue(logDebugStub.calledWith(`${baseError}. Details: ${error}`));
+            assert.deepEqual(err.message, baseError);
         }
     });
 

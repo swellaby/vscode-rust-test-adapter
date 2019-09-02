@@ -124,6 +124,11 @@
           "description": "The root Cargo.toml manifest file for the workspace",
           "type": "string",
           "scope": "resource"
+        },
+        "rustTestExplorer.logpanel": {
+          "description": "Enable logging to the VS Code panel",
+          "type": "boolean",
+          "default": true
         }
       }
     }

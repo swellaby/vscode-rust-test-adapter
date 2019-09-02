@@ -54,7 +54,7 @@ export class RustAdapter implements TestAdapter {
             const loadedTests = await loadWorkspaceTests(this.workspaceRootDirectoryPath, this.log, <IConfiguration>{ loadUnitTests: true });
 
             if (!loadedTests) {
-                this.log.info('No unit tests found');
+                this.log.warn('No tests found in workspace');
                 this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished' });
             } else {
                 this.testCases = loadedTests.testCasesMap;

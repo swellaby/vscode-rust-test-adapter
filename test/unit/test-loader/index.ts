@@ -3,8 +3,10 @@
 import * as Sinon from 'sinon';
 
 import { rustAdapterParamStubs } from '../../test-utils';
-import buildRootTestSuiteInfoNode from './build-root-test-suite-info-node';
+import aggregateWorkspaceTestResults from './aggregate-workspace-test-results';
+import buildRootNodeInfo from './build-root-node-info';
 import buildWorkspaceLoadedTestResult from './build-workspace-loaded-tests-result';
+import getTestLoaders from './get-test-loaders';
 import loadDocumentationTests from './load-documentation-tests';
 import loadIntegrationTests from './load-integration-tests';
 import loadPackageUnitTestTree from './load-package-unit-test-tree';
@@ -22,8 +24,10 @@ suite('test-loader Tests:', function () {
         Sinon.restore();
     });
 
-    suite('buildRootTestSuiteInfoNode()', buildRootTestSuiteInfoNode.bind(this));
+    suite('aggregateWorkspaceTestResults()', aggregateWorkspaceTestResults.bind(this));
+    suite('buildRootNodeInfo()', buildRootNodeInfo.bind(this));
     suite('buildWorkspaceLoadedTestResult()', buildWorkspaceLoadedTestResult.bind(this));
+    suite('getTestLoaders()', getTestLoaders.bind(this));
     suite('loadDocumentationTests()', loadDocumentationTests.bind(this));
     suite('loadIntegrationTests()', loadIntegrationTests.bind(this));
     suite('loadPackageUnitTestTree()', loadPackageUnitTestTree.bind(this));
