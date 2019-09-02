@@ -17,21 +17,25 @@ import * as unitParser from '../../../src/parsers/unit-parser';
 export default function suite() {
     let getCargoUnitTestListForPackageStub: Sinon.SinonStub;
     let parseCargoTestListResultsStub: Sinon.SinonStub;
+    let logDebugStub: Sinon.SinonStub;
     const { logStub } = rustAdapterParams;
     const { binLoadedTestsResultStub } = treeNodes;
 
-    setup(() => {
+    setup(function () {
         getCargoUnitTestListForPackageStub = Sinon.stub(cargo, 'getCargoUnitTestListForPackage');
         parseCargoTestListResultsStub = Sinon.stub(unitParser, 'parseCargoTestListResults');
+        logDebugStub = this.test.ctx.logDebugStub;
     });
 
     test('Should handle error correctly', async () => {
         const expErr = new Error('load failed');
         getCargoUnitTestListForPackageStub.throws(() => expErr);
         try {
-            await loadPackageUnitTestTree(null, null);
+            await loadPackageUnitTestTree(swansonLibPackage, logStub);
             assert.fail('Should have thrown');
         } catch (err) {
+            const baseErrorMessage = `Fatal error while attempting to load unit tests for package: ${swansonLibPackage.name}`;
+            assert.isTrue(logDebugStub.calledWithExactly(`${baseErrorMessage}. Details: ${expErr}`))
             assert.deepEqual(err, expErr);
         }
     });

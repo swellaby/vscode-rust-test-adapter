@@ -40,6 +40,8 @@ export const loadPackageUnitTestTree = async (cargoPackage: ICargoPackage, log: 
         const cargoTestListResults = await getCargoUnitTestListForPackage(cargoPackage, log);
         resolve(parseCargoTestListResults(cargoPackage, cargoTestListResults));
     } catch (err) {
+        const baseErrorMessage = `Fatal error while attempting to load unit tests for package: ${cargoPackage.name}`;
+        log.debug(`${baseErrorMessage}. Details: ${err}`);
         reject(err);
     }
 });

@@ -31,7 +31,7 @@ export default function suite() {
         type: 'suite',
         children: []
     };
-    const { binLoadedTestsResultStub } = treeNodes;
+    const { binLoadedTestsResultStub, libLoadedTestsResultStub } = treeNodes;
 
     setup(() => {
         createEmptyTestSuiteNodeStub = Sinon.stub(utils, 'createEmptyTestSuiteNode').callsFake(() => emptyTestSuiteNode);
@@ -47,5 +47,21 @@ export default function suite() {
             NodeCategory.structural
         ));
         assert.isTrue(createTestSuiteInfoStub.calledWithExactly(rootNodeId, rootNodeLabel));
+    });
+
+    test('Should flatten root nodes children when there is only one child', () => {
+        const { testSuiteInfo } = buildRootNodeInfo([ binLoadedTestsResultStub.rootTestSuite ], rootNodeId, rootNodeLabel);
+        assert.deepEqual(testSuiteInfo.children, binLoadedTestsResultStub.rootTestSuite.children);
+    });
+
+    test('Should not flatten root nodes children when there is more than one child', () => {
+        const nodes = [ binLoadedTestsResultStub.rootTestSuite, libLoadedTestsResultStub.rootTestSuite ];
+        const { testSuiteInfo } = buildRootNodeInfo(nodes, rootNodeId, rootNodeLabel);
+        assert.deepEqual(testSuiteInfo.children, nodes);
+    });
+
+    test('Should set correct childrenNodeIds on test suite node', () => {
+        const { testSuiteNode, testSuiteInfo } = buildRootNodeInfo([ binLoadedTestsResultStub.rootTestSuite ], rootNodeId, rootNodeLabel);
+        assert.deepEqual(testSuiteNode.childrenNodeIds, testSuiteInfo.children.map(c => c.id));
     });
 }
