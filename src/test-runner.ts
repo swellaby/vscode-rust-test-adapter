@@ -1,32 +1,11 @@
 'use strict';
 
-import * as childProcess from 'child_process';
 import { TestEvent } from 'vscode-test-adapter-api';
 
 import { ITestCaseNode } from './interfaces/test-case-node';
 import { ITestSuiteNode } from './interfaces/test-suite-node';
-import { TargetType } from './enums/target-type';
-import { INodeTarget } from './interfaces/node-target';
-
-const runCargoTestCommand = async(packageName: string, workspaceRootDir: string, testFilter: string) => new Promise<string>((resolve, reject) => {
-    const execArgs: childProcess.ExecOptions = {
-        cwd: workspaceRootDir,
-        maxBuffer: 200 * 1024
-    };
-
-    const command = `cargo test -p ${packageName} ${testFilter}`;
-    console.log(`command: ${command}`);
-    childProcess.exec(command, execArgs, (err, stdout, stderr) => {
-        // If there are failed tests then stderr will be truthy so we want to return stdout.
-        if (err && !stderr) {
-            console.log('crash');
-            return reject(err);
-        }
-        console.log('output:\n');
-        console.log(`${stdout}`);
-        resolve(stdout);
-    });
-});
+import { runCargoTestsForPackageTargetWithPrettyFormat } from './cargo';
+import { ICargoTestExecutionParameters } from './interfaces/cargo-test-execution-parameters';
 
 const parseTestResult = (testIdPrefix: string, testOutputLine: string): TestEvent => {
     const testLine = testOutputLine.substr(5).split(' ... ');
@@ -67,24 +46,18 @@ const parseTestCaseResultOutput = (testIdPrefix: string, output: string): TestEv
     return testResults;
 };
 
-const buildTargetFilter = (nodeTarget: INodeTarget): string => {
-    if (nodeTarget.targetType === TargetType.lib) {
-        return ' --lib ';
-    } else if (nodeTarget.targetType === TargetType.bin) {
-        return ` --bin ${nodeTarget.targetName} `;
-    } else {
-        return ` --test ${nodeTarget.targetName} `;
-    }
-};
-
 export const runTestCase = async (testCaseNode: ITestCaseNode, workspaceRootDir: string) => new Promise<TestEvent>(async (resolve, reject) => {
     try {
-        const packageName = testCaseNode.packageName;
-        const target = buildTargetFilter(testCaseNode.nodeTarget);
-        const specName = testCaseNode.testSpecName;
-        const testFilter = `${target} ${specName} -- --exact`;
-        const output = await runCargoTestCommand(packageName, workspaceRootDir, testFilter);
-        resolve(parseTestCaseResultOutput(testCaseNode.nodeIdPrefix, output)[0]);
+        const { packageName, nodeTarget, testSpecName, nodeIdPrefix } = testCaseNode;
+        const params = <ICargoTestExecutionParameters> {
+            cargoSubCommandArgs: testSpecName,
+            nodeTarget: nodeTarget,
+            packageName,
+            targetWorkspace: workspaceRootDir,
+            testBinaryArgs: '--exact'
+        };
+        const output = await runCargoTestsForPackageTargetWithPrettyFormat(params);
+        resolve(parseTestCaseResultOutput(nodeIdPrefix, output)[0]);
     } catch (err) {
         console.log(`Test Case Run Error: ${err}`);
         reject(err);
@@ -93,14 +66,16 @@ export const runTestCase = async (testCaseNode: ITestCaseNode, workspaceRootDir:
 
 export const runTestSuite = async (testSuiteNode: ITestSuiteNode, workspaceRootDir: string) => new Promise<TestEvent[]>(async (resolve, reject) => {
     try {
-        const packageName = testSuiteNode.packageName;
-        const specName = testSuiteNode.testSpecName;
-
-        const results = await Promise.all(testSuiteNode.targets.map(async target => {
-            const targetFilter = buildTargetFilter(target);
-            const testFilter = `${targetFilter} ${specName} --no-fail-fast`;
+        const { packageName, testSpecName, targets } = testSuiteNode;
+        const results = await Promise.all(targets.map(async target => {
             const testIdPrefix = `${packageName}::${target.targetName}::${target.targetType}`;
-            const output = await runCargoTestCommand(packageName, workspaceRootDir, testFilter);
+            const params = <ICargoTestExecutionParameters> {
+                cargoSubCommandArgs: `${testSpecName} --no-fail-fast`,
+                nodeTarget: target,
+                packageName,
+                targetWorkspace: workspaceRootDir
+            };
+            const output = await runCargoTestsForPackageTargetWithPrettyFormat(params);
             return parseTestCaseResultOutput(testIdPrefix, output);
         }));
 

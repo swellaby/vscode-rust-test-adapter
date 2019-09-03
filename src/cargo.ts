@@ -163,7 +163,7 @@ export const runCargoTestsForPackageTargetWithFormat = async (
     const { packageName, nodeTarget, targetWorkspace, cargoSubCommandArgs, testBinaryArgs, log } = params;
     try {
         const filter = getCargoPackageTargetFilter(packageName, nodeTarget);
-        const subArgs = `${cargoSubCommandArgs ? cargoSubCommandArgs : ''}`;
+        const subArgs = `${cargoSubCommandArgs ? ` ${cargoSubCommandArgs}` : ''}`;
         const binaryArgs = `${testBinaryArgs ? ` ${testBinaryArgs}` : ''}`;
         const args = `${filter}${subArgs} -- --format ${format}${binaryArgs}`;
         const stdout = await runCargoCommand(cargoSubCommand, args, targetWorkspace, maxBuffer, true);

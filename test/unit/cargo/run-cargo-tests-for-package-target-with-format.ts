@@ -87,7 +87,7 @@ export default function suite() {
         params.cargoSubCommandArgs = spec;
         await runCargoTestsForPackageTargetWithFormat(params, format);
         const actArgs = runCargoCommandStub.firstCall.args[1];
-        assert.deepEqual(actArgs, `${packageTargetFilter}${spec} -- --format ${format}`);
+        assert.deepEqual(actArgs, `${packageTargetFilter} ${spec} -- --format ${format}`);
     });
 
     test('Should use correct default for cargoTestArgs when none provided', async () => {
