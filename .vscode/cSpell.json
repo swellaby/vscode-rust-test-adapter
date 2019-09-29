@@ -3,9 +3,11 @@
   "language": "en",
   "words": [
     "autorun",
+    "backtrace",
     "cdylib",
     "cobertura",
     "codecov",
+    "errored",
     "dylib",
     "hbenl",
     "libc",

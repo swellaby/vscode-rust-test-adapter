@@ -65,7 +65,7 @@ suite('utils', () => {
 
         test('Should initialize the testSpecName with default empty string', () => {
             const node: ITestCaseNode = createTestCaseNode(id, packageName, nodeTarget, nodeIdPrefix);
-            assert.deepEqual(node, {
+            assert.deepEqual(node, <ITestCaseNode> {
                 id,
                 packageName,
                 nodeIdPrefix,
@@ -76,7 +76,7 @@ suite('utils', () => {
 
         test('Should initialize the testSpecName with specified value', () => {
             const node: ITestCaseNode = createTestCaseNode(id, packageName, nodeTarget, nodeIdPrefix, testSpecName);
-            assert.deepEqual(node, {
+            assert.deepEqual(node, <ITestCaseNode> {
                 id,
                 packageName,
                 nodeIdPrefix,

@@ -46,6 +46,13 @@ export const loadPackageUnitTestTree = async (cargoPackage: ICargoPackage, log: 
     }
 });
 
+/**
+ * Loads the specified types of tests for the packages using the provided loader function.
+ *
+ * @param {ICargoPackage[]} packages - The cargo packages in the workspace.
+ * @param {Log} log - The logger.
+ * @param loadTestTypeTreeForPackage
+ */
 export const loadTestsForPackages = async (
     packages: ICargoPackage[],
     log: Log,
@@ -61,6 +68,14 @@ export const loadTestsForPackages = async (
     return packageTests.filter(Boolean);
 };
 
+/**
+ * Loads the unit tests.
+ *
+ * @param {ICargoPackage[]} packages - The packages to load tests from.
+ * @param {Log} log - The logger.
+ *
+ * @returns {Promise<ITestTypeLoadedTestsResult>}
+ */
 export const loadUnitTests = async (
     packages: ICargoPackage[],
     log: Log
@@ -73,6 +88,14 @@ export const loadUnitTests = async (
     return { rootNode, results, testSuiteNode };
 };
 
+/**
+ * Loads the documentation tests.
+ *
+ * @param {ICargoPackage[]} packages - The packages to load tests from.
+ * @param {Log} log - The logger.
+ *
+ * @returns {Promise<ITestTypeLoadedTestsResult>}
+ */
 export const loadDocumentationTests = async (
     _packages: ICargoPackage[],
     _log: Log
@@ -80,6 +103,14 @@ export const loadDocumentationTests = async (
     return Promise.reject(new Error('Not yet implemented.'));
 };
 
+/**
+ * Loads the integration tests.
+ *
+ * @param {ICargoPackage[]} packages - The packages to load tests from.
+ * @param {Log} log - The logger.
+ *
+ * @returns {Promise<ITestTypeLoadedTestsResult>}
+ */
 export const loadIntegrationTests = async (
     _packages: ICargoPackage[],
     _log: Log
@@ -87,6 +118,14 @@ export const loadIntegrationTests = async (
     return Promise.reject(new Error('Not yet implemented.'));
 };
 
+/**
+ * Aggregates all the various loaded tests into the final resulting object.
+ *
+ * @param {ITestTypeLoadedTestsResult[]} workspaceTestResults - The collection of loaded tests for the workspace.
+ *
+ * @private - Only exposed for unit testing purposes
+ * @returns {ILoadedTestsResult}
+ */
 export const aggregateWorkspaceTestsResults = (workspaceTestResults: ITestTypeLoadedTestsResult[]): ILoadedTestsResult => {
     let testSuitesMap = new Map<string, ITestSuiteNode>();
     const testSuitesMapIterators: [string, ITestSuiteNode][] = [];
@@ -153,11 +192,11 @@ export const getTestLoaders = (packages: ICargoPackage[], log: Log, config: ICon
 /**
  * Loads the all the tests in the specified workspace based on the specified configuration.
  *
- * @param {ICargoPackage[]} packages - The cargo packages in the workspace.
+ * @param {string} workspaceRoot - The root directory of the Cargo workspace.
  * @param {Log} log - The logger.
  * @param {IConfiguration} config - The configuration options.
  *
- * @returns {Promise<ILoadedTestsResult}
+ * @returns {Promise<ILoadedTestsResult>}
  */
 export const loadWorkspaceTests = async (
     workspaceRoot: string,

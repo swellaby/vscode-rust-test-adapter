@@ -22,7 +22,8 @@ export const runCargoCommand = async (
     args: string,
     targetWorkspace: string,
     maxBuffer: number,
-    allowStderr: boolean = false
+    allowStderr: boolean = false,
+    requireStderr: boolean = false
 ) => new Promise<string>((resolve, reject) => {
     const cmd = `cargo ${subCommand} ${args}`;
     const execArgs: ExecOptions = {
@@ -33,7 +34,7 @@ export const runCargoCommand = async (
         if (err) {
             if (!allowStderr) {
                 return reject(err);
-            } else if (!stderr) {
+            } else if (!stderr && requireStderr) {
                 return reject(err);
             }
         }
@@ -166,7 +167,7 @@ export const runCargoTestsForPackageTargetWithFormat = async (
         const subArgs = `${cargoSubCommandArgs ? ` ${cargoSubCommandArgs}` : ''}`;
         const binaryArgs = `${testBinaryArgs ? ` ${testBinaryArgs}` : ''}`;
         const args = `${filter}${subArgs} -- --format ${format}${binaryArgs}`;
-        const stdout = await runCargoCommand(cargoSubCommand, args, targetWorkspace, maxBuffer, true);
+        const stdout = await runCargoCommand(cargoSubCommand, args, targetWorkspace, maxBuffer, true, false);
         resolve(stdout);
     } catch (err) {
         const baseErrorMessage = 'Fatal error while attempting to run tests';

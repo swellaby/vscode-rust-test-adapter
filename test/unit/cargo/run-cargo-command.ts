@@ -53,17 +53,6 @@ export default function suite() {
         }
     });
 
-    test('Should fail when exec yields error with allowStderr enabled and falsy stderr', async () => {
-        const errorMessage = 'Unknown';
-        childProcessExecStub.yields(new Error(errorMessage));
-        try {
-            await runCargoCommand(null, null, null, null, true);
-            assert.fail('Should have thrown');
-        } catch (err) {
-            assert.deepEqual(err.message, errorMessage);
-        }
-    });
-
     test('Should fail when exec yields error with allowStderr disabled and truthy stderr', async () => {
         const errorMessage = 'stderr not allowed';
         childProcessExecStub.yields(new Error(errorMessage), 'foo', 'bar');
@@ -73,6 +62,24 @@ export default function suite() {
         } catch (err) {
             assert.deepEqual(err.message, errorMessage);
         }
+    });
+
+    test('Should fail when exec yields error with allowStderr required, and falsy stderr', async () => {
+        const errorMessage = 'Unknown';
+        childProcessExecStub.yields(new Error(errorMessage));
+        try {
+            await runCargoCommand(null, null, null, null, true, true);
+            assert.fail('Should have thrown');
+        } catch (err) {
+            assert.deepEqual(err.message, errorMessage);
+        }
+    });
+
+    test('Should return stdout when exec yields error with allowStderr allowed, and falsy stderr', async () => {
+        const expStdout = 'fooBarRoo';
+        childProcessExecStub.yields(new Error(), expStdout, 'aBc');
+        const stdout = await runCargoCommand(null, null, null, null, true, false);
+        assert.deepEqual(stdout, expStdout);
     });
 
     test('Should return stdout when exec yields error with allowStderr enabled and truthy stderr', async () => {
