@@ -22,21 +22,44 @@ const parseTestResult = (testIdPrefix: string, testOutputLine: string): TestEven
 // TODO: We need to check for and parse `failures` first, probably into some kind of Dictionary
 // that is keyed off the test name. That data structure then needs to be funneled along to the
 // parsing of the test result
-export const parseTestCaseResultPrettyOutput = (testIdPrefix: string, output: string): TestEvent[] => {
+const extractTestEventResultsFromPrettyOutput = (
+    testIdPrefix: string,
+    output: string,
+    startMessageIndex: number
+): TestEvent[] => {
     const testResults: TestEvent[] = [];
-    const startMessageIndex = output.search(/running \d* (test|tests)/);
-    if (startMessageIndex > 0) {
-        const startMessageEndIndex = output.indexOf('\n', startMessageIndex);
-        const startMessageSummary = output.substring(startMessageIndex, startMessageEndIndex);
-        if (startMessageSummary !== 'running 0 tests') {
-            const testResultsOutput = output.substring(startMessageEndIndex).split('\n\n')[0];
-            const testResultLines = testResultsOutput.split('\ntest ');
-            // First element will be an empty string as `testResultsOutput` starts with `\ntest `
-            for (let i = 1; i < testResultLines.length; i++) {
-                testResults.push(parseTestResult(testIdPrefix, testResultLines[i]));
-            }
+    const startMessageEndIndex = output.indexOf('\n', startMessageIndex);
+    const startMessageSummary = output.substring(startMessageIndex, startMessageEndIndex);
+
+    if (startMessageSummary !== 'running 0 tests') {
+        const testResultsOutput = output.substring(startMessageEndIndex).split('\n\n')[0];
+        const testResultLines = testResultsOutput.split('\ntest ');
+        // First element will be an empty string as `testResultsOutput` starts with `\ntest `
+        for (let i = 1; i < testResultLines.length; i++) {
+            testResults.push(parseTestResult(testIdPrefix, testResultLines[i]));
         }
     }
 
     return testResults;
+};
+
+/**
+ * Parses the cargo test result output in the `pretty` format.
+ *
+ * @param {string} testIdPrefix - The test ID prefix for the associated test nodes.
+ * @param {string} output - The raw `cargo test` result output in the `pretty` format.
+ *
+ * @returns {TestEvent[]}
+ */
+export const parseTestCaseResultPrettyOutput = (testIdPrefix: string, output: string): TestEvent[] => {
+    if (!output) {
+        return [];
+    }
+
+    const startMessageIndex = output.search(/running \d* (test|tests)/);
+    if (startMessageIndex < 0) {
+        return [];
+    }
+
+    return extractTestEventResultsFromPrettyOutput(testIdPrefix, output, startMessageIndex);
 };
