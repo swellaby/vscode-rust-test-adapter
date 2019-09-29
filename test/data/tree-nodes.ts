@@ -9,7 +9,7 @@ import { TargetType } from '../../src/enums/target-type';
 
 export const packageName = 'rust-test-sample';
 
-const libTarget: INodeTarget = {
+export const libTarget: INodeTarget = {
     targetType: TargetType.lib,
     targetName: packageName
 };
@@ -26,7 +26,7 @@ export const libTestCases = {
     libTestCase1
 };
 
-const binTarget: INodeTarget = {
+export const binTarget: INodeTarget = {
     targetType: TargetType.bin,
     targetName: packageName
 };

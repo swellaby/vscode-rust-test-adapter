@@ -36,7 +36,8 @@ export const runTestCase = async (
         const output = await runCargoTestsForPackageTargetWithPrettyFormat(params);
         resolve(parseTestCaseResultPrettyOutput(nodeIdPrefix, output)[0]);
     } catch (err) {
-        const baseErrorMessage = `Fatal error while attempting to run Test Case: ${testCaseNode ? testCaseNode.testSpecName : 'unknown'}`;
+        const testName = testCaseNode && testCaseNode.testSpecName ? testCaseNode.testSpecName : 'unknown';
+        const baseErrorMessage = `Fatal error while attempting to run Test Case: ${testName}`;
         log.debug(`${baseErrorMessage}. Details: ${err}`);
         reject(err);
     }
@@ -72,7 +73,8 @@ export const runTestSuite = async (
 
         resolve([].concat(...results));
     } catch (err) {
-        const baseErrorMessage = `Fatal error while attempting to run Test Suite: ${testSuiteNode ? testSuiteNode.testSpecName : 'unknown'}`;
+        const suiteName = testSuiteNode && testSuiteNode.testSpecName ? testSuiteNode.testSpecName : 'unknown';
+        const baseErrorMessage = `Fatal error while attempting to run Test Suite: ${suiteName}`;
         log.debug(`${baseErrorMessage}. Details: ${err}`);
         reject(err);
     }
