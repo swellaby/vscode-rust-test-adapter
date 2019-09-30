@@ -92,6 +92,12 @@ export default function suite() {
         assert.isUndefined(parseCargoTestListResults(swansonLibPackage, []));
     });
 
+    test('Should pass correct args to create tree nodes', () => {
+        parseCargoTestListResults(swansonLibPackage, cargoTestListResults);
+        assert.isTrue(createEmptyTestSuiteNodeStub.calledWithExactly(packageName, swansonLibPackage));
+        assert.isTrue(createTestSuiteInfoStub.calledWithExactly(packageName, packageName));
+    });
+
     test('Should return correct result when test results has no discovered tests', () => {
         const noDiscoveredTests = [
             undefined,
