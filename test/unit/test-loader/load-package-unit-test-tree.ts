@@ -11,7 +11,7 @@ import {
 import { loadPackageUnitTestTree } from '../../../src/test-loader';
 import { ICargoTestListResult } from '../../../src/interfaces/cargo-test-list-result';
 import * as cargo from '../../../src/cargo';
-import * as unitParser from '../../../src/parsers/unit-parser';
+import * as testListParser from '../../../src/parsers/test-list-parser';
 
 // tslint:disable-next-line:max-func-body-length
 export default function suite() {
@@ -23,7 +23,7 @@ export default function suite() {
 
     setup(function () {
         getCargoUnitTestListForPackageStub = Sinon.stub(cargo, 'getCargoUnitTestListForPackage');
-        parseCargoTestListResultsStub = Sinon.stub(unitParser, 'parseCargoTestListResults');
+        parseCargoTestListResultsStub = Sinon.stub(testListParser, 'parseCargoTestListResults');
         logDebugStub = this.test.ctx.logDebugStub;
     });
 

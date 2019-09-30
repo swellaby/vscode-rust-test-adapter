@@ -10,7 +10,7 @@ import { ICargoTestListResult } from '../interfaces/cargo-test-list-result';
 import { INodeTarget } from '../interfaces/node-target';
 import { NodeCategory } from '../enums/node-category';
 
-const updateTestTree = (
+export const updateTestTree = (
     testNode: TestInfo,
     packageRootNode: TestSuiteInfo,
     modulePathParts: string[],
@@ -42,7 +42,7 @@ const updateTestTree = (
     currentNode.children.push(testNode);
 };
 
-const initializeTestNode = (
+export const initializeTestNode = (
     trimmedModulePathParts: string,
     testName: string,
     nodeIdPrefix: string,
@@ -57,7 +57,7 @@ const initializeTestNode = (
     return testInfo;
 };
 
-const parseCargoTestListOutput = (
+export const parseCargoTestListOutput = (
     cargoTestListResult: ICargoTestListResult,
     nodeIdPrefix: string,
     cargoPackage: ICargoPackage,
@@ -75,7 +75,7 @@ const parseCargoTestListOutput = (
     });
 };
 
-const parseCargoTestListResult = (
+export const parseCargoTestListResult = (
     cargoTestListResult: ICargoTestListResult,
     packageName: string,
     cargoPackage: ICargoPackage,
@@ -98,11 +98,19 @@ const parseCargoTestListResult = (
     parseCargoTestListOutput(cargoTestListResult, targetNodeId, cargoPackage, testCasesMap, targetSuiteInfo, testSuitesMap);
 };
 
+/**
+ * Parses the cargo test list results to create the tree of tests.
+ *
+ * @param {ICargoPackage} cargoPackage - The cargo package.
+ * @param {ICargoTestListResult[]} cargoTestListResults - The resulting lists of cargo tests for the specified package.
+ *
+ * @returns {ILoadedTestsResult}
+ */
 export const parseCargoTestListResults = (cargoPackage: ICargoPackage, cargoTestListResults: ICargoTestListResult[]): ILoadedTestsResult => {
-    if (!cargoTestListResults || cargoTestListResults.length === 0) {
+    if (!cargoPackage || !cargoTestListResults || cargoTestListResults.length === 0) {
         return undefined;
     }
-    const packageName = cargoPackage.name;
+    const { name: packageName } = cargoPackage;
     const packageRootNode = createEmptyTestSuiteNode(packageName, cargoPackage);
     const packageSuiteInfo = createTestSuiteInfo(packageName, packageName);
     const testSuitesMap: Map<string, ITestSuiteNode> = new Map<string, ITestSuiteNode>();
@@ -110,7 +118,7 @@ export const parseCargoTestListResults = (cargoPackage: ICargoPackage, cargoTest
     const testCasesMap: Map<string, ITestCaseNode> = new Map<string, ITestCaseNode>();
 
     cargoTestListResults.forEach(cargoTestListResult => {
-        if (!cargoTestListResult || cargoTestListResult.output.indexOf('0 tests,') === 0) {
+        if (!cargoTestListResult || cargoTestListResult.output.indexOf('0 tests,') >= 0) {
             return;
         }
         parseCargoTestListResult(cargoTestListResult, packageName, cargoPackage, packageRootNode, testSuitesMap, packageSuiteInfo, testCasesMap);

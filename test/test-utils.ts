@@ -12,6 +12,7 @@ import { Log } from 'vscode-test-adapter-util';
 
 import * as dataTreeNodes from './data/tree-nodes';
 import * as testResultOutputs from './data/test-run-outputs';
+import * as testListResults from './data/test-list-results';
 
 import {
     swansonLibPackage
@@ -78,3 +79,4 @@ export const cargoPackages = {
 };
 
 export const testRunOutputs = testResultOutputs;
+export const cargoTestListResults = testListResults.cargoTestListResults;

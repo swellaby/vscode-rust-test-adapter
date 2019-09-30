@@ -6,7 +6,7 @@ import { TestSuiteInfo } from 'vscode-test-adapter-api';
 import { getCargoMetadata, getCargoUnitTestListForPackage } from './cargo';
 import { ILoadedTestsResult } from './interfaces/loaded-tests-result';
 import { ICargoPackage } from './interfaces/cargo-package';
-import { parseCargoTestListResults } from './parsers/unit-parser';
+import { parseCargoTestListResults } from './parsers/test-list-parser';
 import { createEmptyTestSuiteNode, createTestSuiteInfo } from './utils';
 import { ITestSuiteNode } from './interfaces/test-suite-node';
 import { ITestCaseNode } from './interfaces/test-case-node';
@@ -52,6 +52,9 @@ export const loadPackageUnitTestTree = async (cargoPackage: ICargoPackage, log: 
  * @param {ICargoPackage[]} packages - The cargo packages in the workspace.
  * @param {Log} log - The logger.
  * @param loadTestTypeTreeForPackage
+ *
+ * @private - Only exposed for unit testing purposes
+ * @returns {Promise<ILoadedTestsResult[]>}
  */
 export const loadTestsForPackages = async (
     packages: ICargoPackage[],
@@ -74,6 +77,7 @@ export const loadTestsForPackages = async (
  * @param {ICargoPackage[]} packages - The packages to load tests from.
  * @param {Log} log - The logger.
  *
+ * @private - Only exposed for unit testing purposes
  * @returns {Promise<ITestTypeLoadedTestsResult>}
  */
 export const loadUnitTests = async (
@@ -94,6 +98,7 @@ export const loadUnitTests = async (
  * @param {ICargoPackage[]} packages - The packages to load tests from.
  * @param {Log} log - The logger.
  *
+ * @private - Only exposed for unit testing purposes
  * @returns {Promise<ITestTypeLoadedTestsResult>}
  */
 export const loadDocumentationTests = async (
@@ -109,6 +114,7 @@ export const loadDocumentationTests = async (
  * @param {ICargoPackage[]} packages - The packages to load tests from.
  * @param {Log} log - The logger.
  *
+ * @private - Only exposed for unit testing purposes
  * @returns {Promise<ITestTypeLoadedTestsResult>}
  */
 export const loadIntegrationTests = async (
