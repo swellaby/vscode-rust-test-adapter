@@ -4,6 +4,7 @@ import * as Sinon from 'sinon';
 
 import parseCargoTestListResults from './parse-cargo-test-list-results';
 import parseCargoTestListResult from './parse-cargo-test-list-result';
+import parseCargoTestListOutput from './parse-cargo-test-list-output';
 import * as utils from '../../../../src/utils';
 
 suite('test-list-parser Tests:', function () {
@@ -16,6 +17,7 @@ suite('test-list-parser Tests:', function () {
         Sinon.restore();
     });
 
+    suite('parseCargoTestListOutput()', parseCargoTestListOutput.bind(this));
     suite('parseCargoTestListResults()', parseCargoTestListResults.bind(this));
     suite('parseCargoTestListResult()', parseCargoTestListResult.bind(this));
 });

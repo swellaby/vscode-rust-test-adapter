@@ -26,7 +26,7 @@ export default function suite() {
     const { targetName: firstTargetName, targetType: firstTargetType } = firstTarget;
     const firstExpTargetNodeId = `${packageName}::${firstTargetName}::${firstTargetType}`;
     const { nodeTarget: secondTarget } = secondCargoTestListResult;
-    const { targetName: secondTargetName, targetType: secondTargetType } = firstTarget;
+    const { targetName: secondTargetName, targetType: secondTargetType } = secondTarget;
     const secondExpTargetNodeId = `${packageName}::${secondTargetName}::${secondTargetType}`;
     const stubPackageTestSuiteInfo = <TestSuiteInfo> {
         id: packageName,
@@ -58,16 +58,32 @@ export default function suite() {
             firstTarget
         ];
         assert.isTrue(initializeTestNodeStub.calledOnceWithExactly(...expInitializeTestNodeStubArgs));
-        assert.isTrue(updateTestTreeStub.calledOnceWithExactly(stubTestInfo, stubPackageTestSuiteInfo, [ 'tests', 'test_subtract' ], testSuitesMap, firstTarget));
+        assert.isTrue(updateTestTreeStub.calledOnceWithExactly(stubTestInfo, stubPackageTestSuiteInfo, [ 'tests' ], testSuitesMap, swansonLibPackage, firstTarget));
     });
 
     test('Should correctly handle multiple tests', () => {
         parseCargoTestListOutput(secondCargoTestListResult, secondExpTargetNodeId, swansonLibPackage, testCasesMap, stubPackageTestSuiteInfo, testSuitesMap);
         assert.deepEqual(initializeTestNodeStub.callCount, 2);
         assert.deepEqual(updateTestTreeStub.callCount, 2);
-        assert.isTrue(initializeTestNodeStub.calledWithExactly('tests::test_add', 'test_add', secondExpTargetNodeId, swansonLibPackage, testCasesMap, secondTarget));
-        assert.isTrue(initializeTestNodeStub.calledWithExactly('tests::test_bad_add', 'test_bad_add', secondExpTargetNodeId, swansonLibPackage, testCasesMap, secondTarget));
-        assert.isTrue(updateTestTreeStub.calledWithExactly(stubTestInfo, stubPackageTestSuiteInfo, [ 'tests', 'test_add' ], testSuitesMap, secondTarget));
-        assert.isTrue(updateTestTreeStub.calledWithExactly(stubTestInfo, stubPackageTestSuiteInfo, [ 'tests', 'test_bad_add' ], testSuitesMap, secondTarget));
+        const expFirstInitCallArgs = [
+            'tests::foo::test_add',
+            'test_add',
+            secondExpTargetNodeId,
+            swansonLibPackage,
+            testCasesMap,
+            secondTarget
+        ];
+        assert.isTrue(initializeTestNodeStub.firstCall.calledWithExactly(...expFirstInitCallArgs));
+        const expSecondInitCallArgs = [
+            'tests::foo::test_bad_add',
+            'test_bad_add',
+            secondExpTargetNodeId,
+            swansonLibPackage,
+            testCasesMap,
+            secondTarget
+        ];
+        assert.isTrue(initializeTestNodeStub.secondCall.calledWithExactly(...expSecondInitCallArgs));
+        assert.isTrue(updateTestTreeStub.calledWithExactly(stubTestInfo, stubPackageTestSuiteInfo, [ 'tests', 'foo' ], testSuitesMap, swansonLibPackage, secondTarget));
+        assert.isTrue(updateTestTreeStub.calledWithExactly(stubTestInfo, stubPackageTestSuiteInfo, [ 'tests', 'foo' ], testSuitesMap, swansonLibPackage, secondTarget));
     });
 }

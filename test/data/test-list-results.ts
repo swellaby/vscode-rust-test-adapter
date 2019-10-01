@@ -11,14 +11,14 @@ export const cargoTestListResults = [
     <ICargoTestListResult> {
         output: `tests::test_subtract: test
 
-        1 test, 0 benchmarks`,
+1 test, 0 benchmarks`,
         nodeTarget: libNodeTarget
     },
     <ICargoTestListResult> {
-        output: `tests::test_add: test
-        tests::test_bad_add: test
+        output: `tests::foo::test_add: test
+tests::foo::test_bad_add: test
 
-        2 tests, 0 benchmarks
+2 tests, 0 benchmarks
         `,
         nodeTarget: binNodeTarget
     }
