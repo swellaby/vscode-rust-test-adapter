@@ -1,7 +1,12 @@
 'use strict';
 
 import { TestSuiteInfo, TestInfo } from 'vscode-test-adapter-api';
-import { createEmptyTestSuiteNode, createTestCaseNode, createTestInfo, createTestSuiteInfo } from '../utils';
+import {
+    createEmptyTestSuiteNode,
+    createTestCaseNode,
+    createTestInfo,
+    createTestSuiteInfo
+} from '../utils';
 import { ILoadedTestsResult } from '../interfaces/loaded-tests-result';
 import { ITestSuiteNode } from '../interfaces/test-suite-node';
 import { ITestCaseNode } from '../interfaces/test-case-node';
@@ -27,7 +32,7 @@ export const updateTestTree = (
         const parentNodeId = currentNode.id;
         const currentNodeId = `${parentNodeId}::${part}`;
         let suiteNode = testModulesMap.get(currentNodeId);
-        let suiteInfo: TestSuiteInfo = <TestSuiteInfo>currentNode.children.find(c => c.id === currentNodeId);
+        let suiteInfo: TestSuiteInfo = <TestSuiteInfo> currentNode.children.find(c => c.id === currentNodeId);
         if (!suiteNode) {
             suiteNode = createEmptyTestSuiteNode(currentNodeId, associatedPackage, false, NodeCategory.unit, testSpecName);
             suiteNode.targets.push(nodeTarget);
@@ -49,7 +54,7 @@ export const initializeTestNode = (
     cargoPackage: ICargoPackage,
     testCasesMap: Map<string, ITestCaseNode>,
     nodeTarget: INodeTarget
-) => {
+): TestInfo => {
     const testNodeId = `${nodeIdPrefix}::${trimmedModulePathParts}`;
     const testNode = createTestCaseNode(testNodeId, cargoPackage.name, nodeTarget, nodeIdPrefix, trimmedModulePathParts);
     const testInfo = createTestInfo(testNodeId, testName);
