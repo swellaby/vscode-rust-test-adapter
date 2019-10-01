@@ -1,7 +1,12 @@
 'use strict';
 
 import { TestSuiteInfo, TestInfo } from 'vscode-test-adapter-api';
-import { createEmptyTestSuiteNode, createTestCaseNode, createTestInfo, createTestSuiteInfo } from '../utils';
+import {
+    createEmptyTestSuiteNode,
+    createTestCaseNode,
+    createTestInfo,
+    createTestSuiteInfo
+} from '../utils';
 import { ILoadedTestsResult } from '../interfaces/loaded-tests-result';
 import { ITestSuiteNode } from '../interfaces/test-suite-node';
 import { ITestCaseNode } from '../interfaces/test-case-node';
@@ -10,25 +15,26 @@ import { ICargoTestListResult } from '../interfaces/cargo-test-list-result';
 import { INodeTarget } from '../interfaces/node-target';
 import { NodeCategory } from '../enums/node-category';
 
-const updateTestTree = (
+export const updateTestTree = (
     testNode: TestInfo,
-    packageRootNode: TestSuiteInfo,
+    targetRootNode: TestSuiteInfo,
     modulePathParts: string[],
     testModulesMap: Map<string, ITestSuiteNode>,
     associatedPackage: ICargoPackage,
-    nodeTarget: INodeTarget,
-    testIdPrefix: string
+    nodeTarget: INodeTarget
 ) => {
-    let currentNode = packageRootNode;
+    let currentNode = targetRootNode;
     let testSpecName = '';
+    // This is easier to grok inline than it would be if it were split across multiple functions
+    // eslint-disable-next-line max-statements
     modulePathParts.forEach(part => {
         testSpecName += `${part}::`;
         const parentNodeId = currentNode.id;
         const currentNodeId = `${parentNodeId}::${part}`;
         let suiteNode = testModulesMap.get(currentNodeId);
-        let suiteInfo: TestSuiteInfo = <TestSuiteInfo>currentNode.children.find(c => c.id === currentNodeId);
+        let suiteInfo: TestSuiteInfo = <TestSuiteInfo> currentNode.children.find(c => c.id === currentNodeId);
         if (!suiteNode) {
-            suiteNode = createEmptyTestSuiteNode(currentNodeId, associatedPackage, false, NodeCategory.unit, testSpecName, testIdPrefix);
+            suiteNode = createEmptyTestSuiteNode(currentNodeId, associatedPackage, false, NodeCategory.unit, testSpecName);
             suiteNode.targets.push(nodeTarget);
             suiteInfo = createTestSuiteInfo(currentNodeId, part);
             testModulesMap.set(currentNodeId, suiteNode);
@@ -41,27 +47,27 @@ const updateTestTree = (
     currentNode.children.push(testNode);
 };
 
-const initializeTestNode = (
+export const initializeTestNode = (
     trimmedModulePathParts: string,
     testName: string,
     nodeIdPrefix: string,
     cargoPackage: ICargoPackage,
     testCasesMap: Map<string, ITestCaseNode>,
     nodeTarget: INodeTarget
-) => {
+): TestInfo => {
     const testNodeId = `${nodeIdPrefix}::${trimmedModulePathParts}`;
-    const testNode = createTestCaseNode(testNodeId, cargoPackage.name, nodeTarget, trimmedModulePathParts, nodeIdPrefix);
+    const testNode = createTestCaseNode(testNodeId, cargoPackage.name, nodeTarget, nodeIdPrefix, trimmedModulePathParts);
     const testInfo = createTestInfo(testNodeId, testName);
     testCasesMap.set(testNodeId, testNode);
     return testInfo;
 };
 
-const parseCargoTestListOutput = (
+export const parseCargoTestListOutput = (
     cargoTestListResult: ICargoTestListResult,
     nodeIdPrefix: string,
     cargoPackage: ICargoPackage,
     testCasesMap: Map<string, ITestCaseNode>,
-    packageSuiteInfo: TestSuiteInfo,
+    targetSuiteInfo: TestSuiteInfo,
     testSuitesMap: Map<string, ITestSuiteNode>
 ) => {
     const testsOutput = cargoTestListResult.output.split('\n\n')[0];
@@ -70,11 +76,11 @@ const parseCargoTestListOutput = (
         const modulePathParts = trimmedModulePathParts.split('::');
         const testName = modulePathParts.pop();
         const testNode = initializeTestNode(trimmedModulePathParts, testName, nodeIdPrefix, cargoPackage, testCasesMap, cargoTestListResult.nodeTarget);
-        updateTestTree(testNode, packageSuiteInfo, modulePathParts, testSuitesMap, cargoPackage, cargoTestListResult.nodeTarget, nodeIdPrefix);
+        updateTestTree(testNode, targetSuiteInfo, modulePathParts, testSuitesMap, cargoPackage, cargoTestListResult.nodeTarget);
     });
 };
 
-const parseCargoTestListResult = (
+export const parseCargoTestListResult = (
     cargoTestListResult: ICargoTestListResult,
     packageName: string,
     cargoPackage: ICargoPackage,
@@ -97,11 +103,19 @@ const parseCargoTestListResult = (
     parseCargoTestListOutput(cargoTestListResult, targetNodeId, cargoPackage, testCasesMap, targetSuiteInfo, testSuitesMap);
 };
 
+/**
+ * Parses the cargo test list results to create the tree of tests.
+ *
+ * @param {ICargoPackage} cargoPackage - The cargo package.
+ * @param {ICargoTestListResult[]} cargoTestListResults - The resulting lists of cargo tests for the specified package.
+ *
+ * @returns {ILoadedTestsResult}
+ */
 export const parseCargoTestListResults = (cargoPackage: ICargoPackage, cargoTestListResults: ICargoTestListResult[]): ILoadedTestsResult => {
-    if (!cargoTestListResults || cargoTestListResults.length === 0) {
+    if (!cargoPackage || !cargoTestListResults || cargoTestListResults.length === 0) {
         return undefined;
     }
-    const packageName = cargoPackage.name;
+    const { name: packageName } = cargoPackage;
     const packageRootNode = createEmptyTestSuiteNode(packageName, cargoPackage);
     const packageSuiteInfo = createTestSuiteInfo(packageName, packageName);
     const testSuitesMap: Map<string, ITestSuiteNode> = new Map<string, ITestSuiteNode>();
@@ -109,7 +123,7 @@ export const parseCargoTestListResults = (cargoPackage: ICargoPackage, cargoTest
     const testCasesMap: Map<string, ITestCaseNode> = new Map<string, ITestCaseNode>();
 
     cargoTestListResults.forEach(cargoTestListResult => {
-        if (!cargoTestListResult || cargoTestListResult.output.indexOf('0 tests,') === 0) {
+        if (!cargoTestListResult || cargoTestListResult.output.indexOf('0 tests,') >= 0) {
             return;
         }
         parseCargoTestListResult(cargoTestListResult, packageName, cargoPackage, packageRootNode, testSuitesMap, packageSuiteInfo, testCasesMap);

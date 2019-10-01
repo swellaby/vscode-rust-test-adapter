@@ -1,112 +1,81 @@
 'use strict';
 
-import * as childProcess from 'child_process';
+import { Log } from 'vscode-test-adapter-util';
 import { TestEvent } from 'vscode-test-adapter-api';
 
+import { ICargoTestExecutionParameters } from './interfaces/cargo-test-execution-parameters';
+import { IConfiguration } from './interfaces/configuration';
 import { ITestCaseNode } from './interfaces/test-case-node';
 import { ITestSuiteNode } from './interfaces/test-suite-node';
-import { TargetType } from './enums/target-type';
-import { INodeTarget } from './interfaces/node-target';
+import { runCargoTestsForPackageTargetWithPrettyFormat } from './cargo';
+import { parseTestCaseResultPrettyOutput } from './parsers/pretty-test-result-parser';
 
-const runCargoTestCommand = async(packageName: string, workspaceRootDir: string, testFilter: string) => new Promise<string>((resolve, reject) => {
-    const execArgs: childProcess.ExecOptions = {
-        cwd: workspaceRootDir,
-        maxBuffer: 200 * 1024
-    };
-
-    const command = `cargo test -p ${packageName} ${testFilter}`;
-    console.log(`command: ${command}`);
-    childProcess.exec(command, execArgs, (err, stdout, stderr) => {
-        // If there are failed tests then stderr will be truthy so we want to return stdout.
-        if (err && !stderr) {
-            console.log('crash');
-            return reject(err);
-        }
-        console.log('output:\n');
-        console.log(`${stdout}`);
-        resolve(stdout);
-    });
-});
-
-const parseTestResult = (testIdPrefix: string, testOutputLine: string): TestEvent => {
-    const testLine = testOutputLine.substr(5).split(' ... ');
-    const testName = testLine[0];
-    const testResult = testLine[1].toLowerCase();
-    let state;
-    // TODO: should this be startsWith to account for test warnings?
-    if (testResult === 'ok') {
-        state = 'passed';
-    } else if (testResult === 'failed') {
-        state = 'failed';
-    } else {
-        state = 'skipped';
-    }
-    // TODO: figure out how to get failed test output here for message
-    return {
-        state,
-        test: `${testIdPrefix}::${testName}`,
-        type: 'test'
-    };
-};
-
-const parseTestCaseResultOutput = (testIdPrefix: string, output: string): TestEvent[] => {
-    const testResults: TestEvent[] = [];
-    const startMessageIndex = output.search(/running \d* (test|tests)/);
-    if (startMessageIndex > 0) {
-        const startMessageEndIndex = output.indexOf('\n', startMessageIndex);
-        const startMessageSummary = output.substring(startMessageIndex, startMessageEndIndex);
-        if (startMessageSummary !== 'running 0 tests') {
-            const testResultsOutput = output.substring(startMessageEndIndex + 1).split('\n\n')[0];
-            const testResultLines = testResultsOutput.split('\n');
-            testResultLines.forEach(testResultLine => {
-                testResults.push(parseTestResult(testIdPrefix, testResultLine));
-            });
-        }
-    }
-
-    return testResults;
-};
-
-const buildTargetFilter = (nodeTarget: INodeTarget): string => {
-    if (nodeTarget.targetType === TargetType.lib) {
-        return ' --lib ';
-    } else if (nodeTarget.targetType === TargetType.bin) {
-        return ` --bin ${nodeTarget.targetName} `;
-    } else {
-        return ` --test ${nodeTarget.targetName} `;
-    }
-};
-
-export const runTestCase = async (testCaseNode: ITestCaseNode, workspaceRootDir: string) => new Promise<TestEvent>(async (resolve, reject) => {
+/**
+ * Runs a single test case.
+ *
+ * @param {ITestCaseNode} testCaseNode - The test case to run.
+ * @param {string} workspaceRoot - The root directory of the Cargo workspace.
+ * @param {Log} log - The logger.
+ * @param {IConfiguration} config - The configuration options.
+ */
+export const runTestCase = async (
+    testCaseNode: ITestCaseNode,
+    workspaceRootDir: string,
+    log: Log,
+    _config: IConfiguration
+) => new Promise<TestEvent>(async (resolve, reject) => {
     try {
-        const packageName = testCaseNode.packageName;
-        const target = buildTargetFilter(testCaseNode.nodeTarget);
-        const specName = testCaseNode.testSpecName;
-        const testFilter = `${target} ${specName} -- --exact`;
-        const output = await runCargoTestCommand(packageName, workspaceRootDir, testFilter);
-        resolve(parseTestCaseResultOutput(testCaseNode.nodeIdPrefix, output)[0]);
+        const { packageName, nodeTarget, testSpecName, nodeIdPrefix } = testCaseNode;
+        const params = <ICargoTestExecutionParameters> {
+            cargoSubCommandArgs: `${testSpecName} -q`,
+            nodeTarget: nodeTarget,
+            packageName,
+            targetWorkspace: workspaceRootDir,
+            testBinaryArgs: '--exact'
+        };
+        const output = await runCargoTestsForPackageTargetWithPrettyFormat(params);
+        resolve(parseTestCaseResultPrettyOutput(nodeIdPrefix, output)[0]);
     } catch (err) {
-        console.log(`Test Case Run Error: ${err}`);
+        const testName = testCaseNode && testCaseNode.testSpecName ? testCaseNode.testSpecName : 'unknown';
+        const baseErrorMessage = `Fatal error while attempting to run Test Case: ${testName}`;
+        log.debug(`${baseErrorMessage}. Details: ${err}`);
         reject(err);
     }
 });
 
-export const runTestSuite = async (testSuiteNode: ITestSuiteNode, workspaceRootDir: string) => new Promise<TestEvent[]>(async (resolve, reject) => {
+/**
+ * Runs a test suite.
+ *
+ * @param {ITestSuiteNode} testCaseNode - The test suite to run.
+ * @param {string} workspaceRoot - The root directory of the Cargo workspace.
+ * @param {Log} log - The logger.
+ * @param {IConfiguration} config - The configuration options.
+ */
+export const runTestSuite = async (
+    testSuiteNode: ITestSuiteNode,
+    workspaceRootDir: string,
+    log: Log,
+    _config: IConfiguration
+) => new Promise<TestEvent[]>(async (resolve, reject) => {
     try {
-        const packageName = testSuiteNode.packageName;
-        const specName = testSuiteNode.testSpecName;
-
-        const results = await Promise.all(testSuiteNode.targets.map(async target => {
-            const targetFilter = buildTargetFilter(target);
-            const testFilter = `${targetFilter} ${specName}`;
+        const { packageName, testSpecName, targets } = testSuiteNode;
+        const results = await Promise.all(targets.map(async target => {
             const testIdPrefix = `${packageName}::${target.targetName}::${target.targetType}`;
-            const output = await runCargoTestCommand(packageName, workspaceRootDir, testFilter);
-            return parseTestCaseResultOutput(testIdPrefix, output);
+            const params = <ICargoTestExecutionParameters> {
+                cargoSubCommandArgs: `${testSpecName} --no-fail-fast -q`,
+                nodeTarget: target,
+                packageName,
+                targetWorkspace: workspaceRootDir
+            };
+            const output = await runCargoTestsForPackageTargetWithPrettyFormat(params);
+            return parseTestCaseResultPrettyOutput(testIdPrefix, output);
         }));
 
         resolve([].concat(...results));
     } catch (err) {
-        console.log(`Test Suite Run Error: ${err}`);
+        const suiteName = testSuiteNode && testSuiteNode.testSpecName ? testSuiteNode.testSpecName : 'unknown';
+        const baseErrorMessage = `Fatal error while attempting to run Test Suite: ${suiteName}`;
+        log.debug(`${baseErrorMessage}. Details: ${err}`);
         reject(err);
     }
 });

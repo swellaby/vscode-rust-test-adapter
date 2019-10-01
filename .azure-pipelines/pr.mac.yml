@@ -1,0 +1,29 @@
+trigger:
+- master
+
+pr:
+- master
+
+pool:
+  vmImage: 'macos-10.14'
+
+resources:
+  repositories:
+  - repository: templates
+    type: github
+    name: swellaby/azure-pipelines-templates
+    endpoint: swellaby
+
+steps:
+- task: UseNode@1
+  displayName: 'Use Node 10.x'
+  inputs:
+    version: 10.x
+- template: templates/yml/node/combo/npm-test-lint-validation-xunit-cobertura.yml@templates
+  parameters:
+    publishTestResults:
+      taskDisplayName: 'Publish unit test results'
+      testResultsFormat: 'JUnit'
+      testResultsFiles: 'xunit.xml'
+      searchFolder: '$(Build.SourcesDirectory)/.testresults/unit'
+      testRunTitle: 'vscode-rust-test-adapter::Unit Tests::Mac PR - Build $(Build.BuildId)'

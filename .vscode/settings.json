@@ -1,13 +1,13 @@
 {
   "files.exclude": {
-      "**/*.js": { "when": "$(basename).ts" },
-      "**/*.map": { "when": "$(basename).map" },
-      "npm-debug.log": true,
-      ".coverage": true,
-      ".testresults": true,
-      ".nyc_output": true,
-      "node_modules": true,
-      ".vsix": true
+    "**/*.js": { "when": "$(basename).ts" },
+    "**/*.map": { "when": "$(basename).map" },
+    "npm-debug.log": true,
+    ".coverage": true,
+    ".testresults": true,
+    ".nyc_output": true,
+    "node_modules": true,
+    ".vsix": true
   },
   "testExplorer.codeLens": true,
   // "mochaExplorer.nodePath": null,
@@ -24,27 +24,29 @@
     "**/mocha-reporter-config.json"
   ],
   "cSpell.enabledLanguageIds": [
-      "asciidoc",
-      "html",
-      "javascript",
-      "json",
-      "markdown",
-      "plaintext",
-      "restructuredtext",
-      "scss",
-      "text",
-      "typescript",
-      "yaml",
-      "yml"
+    "asciidoc",
+    "html",
+    "javascript",
+    "json",
+    "markdown",
+    "plaintext",
+    "restructuredtext",
+    "scss",
+    "text",
+    "typescript",
+    "yaml",
+    "yml"
   ],
   "cSpell.dictionaries": [
     "companies",
     "en_us",
     "filetypes",
-    "golang",
     "misc",
     "node",
     "npm",
     "softwareTerms"
-  ]
+  ],
+  "files.associations": {
+    "**/.azure-pipelines/**": "azure-pipelines"
+  },
 }

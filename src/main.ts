@@ -25,7 +25,7 @@ const registerAdapter = (
 
 export async function activate(context: vscode.ExtensionContext) {
     const workspaceFolder = (vscode.workspace.workspaceFolders || [])[0];
-    const log = new Log('rustExplorer', workspaceFolder, 'Rust Explorer Log');
+    const log = new Log('rustTestExplorer', workspaceFolder, 'Rust Explorer Log');
     context.subscriptions.push(log);
 
     const testExplorerExtension = vscode.extensions.getExtension<TestHub>(testExplorerExtensionId);

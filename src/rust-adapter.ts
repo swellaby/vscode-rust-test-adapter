@@ -9,8 +9,10 @@ import {
     TestRunFinishedEvent
 } from 'vscode-test-adapter-api';
 import { Log } from 'vscode-test-adapter-util';
-import { loadUnitTests } from './test-loader';
+import { loadWorkspaceTests } from './test-loader';
+import { IConfiguration } from './interfaces/configuration';
 import { IDisposable } from './interfaces/disposable';
+import { ITargetRunNodes } from './interfaces/target-run-nodes';
 import { runTestCase, runTestSuite } from './test-runner';
 import { ITestSuiteNode } from './interfaces/test-suite-node';
 import { ITestCaseNode } from './interfaces/test-case-node';
@@ -49,10 +51,10 @@ export class RustAdapter implements TestAdapter {
         this.testsEmitter.fire(<TestLoadStartedEvent>{ type: 'started' });
 
         try {
-            const loadedTests = await loadUnitTests(this.workspaceRootDirectoryPath, this.log);
+            const loadedTests = await loadWorkspaceTests(this.workspaceRootDirectoryPath, this.log, <IConfiguration>{ loadUnitTests: true });
 
             if (!loadedTests) {
-                this.log.info('No unit tests found');
+                this.log.warn('No tests found in workspace');
                 this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished' });
             } else {
                 this.testCases = loadedTests.testCasesMap;
@@ -60,29 +62,49 @@ export class RustAdapter implements TestAdapter {
                 this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished', suite: loadedTests.rootTestSuite });
             }
         } catch (err) {
-            console.log(`load error: ${err}`);
+            this.log.error(`Error loading tests: ${err}`);
             this.testsEmitter.fire(<TestLoadFinishedEvent>{ type: 'finished' });
         }
     }
 
-    private extractPackageTestSuitesFromNodes(nodeId: string, packageSuites: ITestSuiteNode[]) {
-        const node = this.testSuites.get(nodeId);
-        if (node && node.isStructuralNode) {
-            node.childrenNodeIds.forEach(id => {
-                return this.extractPackageTestSuitesFromNodes(id, packageSuites);
-            });
+    private async runTestSuites(testSuites: ITestSuiteNode[]): Promise<void> {
+        await Promise.all(testSuites.map(async testSuite => {
+            const results = await runTestSuite(testSuite, this.workspaceRootDirectoryPath, this.log, null);
+            results.forEach(result => this.testStatesEmitter.fire(<TestEvent>result));
+        }));
+    }
+
+    private async runTestCases(testCases: ITestCaseNode[]): Promise<void> {
+        await Promise.all(testCases.map(async testCase => {
+            const result = await runTestCase(testCase, this.workspaceRootDirectoryPath, this.log, null);
+            this.testStatesEmitter.fire(<TestEvent>result);
+        }));
+    }
+
+    private extractTestTargetsFromNodes(nodeId: string, targetNodes: ITargetRunNodes) {
+        if (this.testSuites.has(nodeId)) {
+            const node = this.testSuites.get(nodeId);
+            if (node.isStructuralNode) {
+                node.childrenNodeIds.forEach(id => {
+                    return this.extractTestTargetsFromNodes(id, targetNodes);
+                });
+            } else {
+                targetNodes.testSuites.push(node);
+                return targetNodes;
+            }
         } else {
-            return packageSuites.push(node);
+            targetNodes.testCases.push(this.testCases.get(nodeId));
+            return targetNodes;
         }
     }
 
-    private async runTestSuite(nodeId: string): Promise<void> {
-        const packageSuites: ITestSuiteNode[] = [];
-        this.extractPackageTestSuitesFromNodes(nodeId, packageSuites);
-        await Promise.all(packageSuites.map(async packageSuite => {
-            const results = await runTestSuite(packageSuite, this.workspaceRootDirectoryPath);
-            results.forEach(result => this.testStatesEmitter.fire(<TestEvent>result));
-        }));
+    private async runTargetsForSuiteNode(nodeId: string): Promise<void> {
+        const targetNodes = <ITargetRunNodes>{ testCases: [], testSuites: [] };
+        this.extractTestTargetsFromNodes(nodeId, targetNodes);
+        await Promise.all([
+            await this.runTestSuites(targetNodes.testSuites),
+            await this.runTestCases(targetNodes.testCases)
+        ]);
     }
 
     public async run(nodeIds: string[]): Promise<void> {
@@ -90,33 +112,27 @@ export class RustAdapter implements TestAdapter {
         this.testStatesEmitter.fire(<TestRunStartedEvent>{ type: 'started', tests: nodeIds });
 
         try {
-            if (nodeIds.length === 1 && nodeIds[0] === 'root') {
-                nodeIds = this.testSuites.get('root').childrenNodeIds;
-            }
             await Promise.all(nodeIds.map(async nodeId => {
                 if (this.testCases.has(nodeId)) {
-                    const testCase = this.testCases.get(nodeId);
-                    const result = await runTestCase(testCase, this.workspaceRootDirectoryPath);
-                    this.testStatesEmitter.fire(<TestEvent>result);
+                    await this.runTestCases([ this.testCases.get(nodeId) ]);
                 } else {
-                    await this.runTestSuite(nodeId);
+                    await this.runTargetsForSuiteNode(nodeId);
                 }
             }));
         } catch (err) {
-            this.log.error(`Run err ${err}`);
-            console.log(`Run err ${err}`);
+            this.log.error(`Run error: ${err}`);
         }
 
         this.testStatesEmitter.fire(<TestRunFinishedEvent>{ type: 'finished' });
     }
 
     public async debug(_tests: string[]): Promise<void> {
-        // in a "real" TestAdapter this would start a test run in a child process and attach the debugger to it
+        // TODO: start a test run in a child process and attach the debugger to it
         throw new Error('Method not implemented.');
     }
 
     public cancel(): void {
-        // in a "real" TestAdapter this would kill the child process for the current test run (if there is any)
+        // TODO: kill the child process for the current test run (if there is any)
         throw new Error('Method not implemented.');
     }
 

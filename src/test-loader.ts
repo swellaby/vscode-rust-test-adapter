@@ -1,131 +1,225 @@
 'use strict';
 
-import * as childProcess from 'child_process';
-
-import { ICargoMetadata } from './interfaces/cargo-metadata';
-import { ILoadedTestsResult } from './interfaces/loaded-tests-result';
 import { Log } from 'vscode-test-adapter-util';
+import { TestSuiteInfo } from 'vscode-test-adapter-api';
+
+import { getCargoMetadata, getCargoUnitTestListForPackage } from './cargo';
+import { ILoadedTestsResult } from './interfaces/loaded-tests-result';
 import { ICargoPackage } from './interfaces/cargo-package';
-import { parseCargoTestListResults } from './parsers/unit-parser';
+import { parseCargoTestListResults } from './parsers/test-list-parser';
 import { createEmptyTestSuiteNode, createTestSuiteInfo } from './utils';
 import { ITestSuiteNode } from './interfaces/test-suite-node';
 import { ITestCaseNode } from './interfaces/test-case-node';
-import { TargetType } from './enums/target-type';
 import { NodeCategory } from './enums/node-category';
-import { TestSuiteInfo } from 'vscode-test-adapter-api';
-import { ICargoTestListResult } from './interfaces/cargo-test-list-result';
+import { IConfiguration } from './interfaces/configuration';
 
-// https://doc.rust-lang.org/reference/linkage.html
-// Other types of various lib targets that may be listed in the Cargo metadata.
-// However, we still need to use --lib for both test detection and execution with all of these.
-// See https://github.com/swellaby/vscode-rust-test-adapter/issues/34
-const libTargetTypes = [ 'staticlib', 'dylib', 'cdylib', 'rlib' ];
+interface IRootNodeInfo { testSuiteInfo: TestSuiteInfo; testSuiteNode: ITestSuiteNode; }
+interface ITestTypeLoadedTestsResult {
+    results: ILoadedTestsResult[];
+    rootNode: TestSuiteInfo;
+    testSuiteNode: ITestSuiteNode;
+}
 
-const runCargoTestCommand = async (testArgs: string, workspaceDir: string, log: Log) => new Promise<string>((resolve, reject) => {
-    const execArgs: childProcess.ExecOptions = {
-        cwd: workspaceDir,
-        maxBuffer: 400 * 1024
-    };
-    const cmd = `cargo test ${testArgs ? `${testArgs}` : ''} -- --list`;
-    childProcess.exec(cmd, execArgs, (err, stdout) => {
-        if (err) {
-            // log.debug(err);
-            return reject(err);
-        }
-        resolve(stdout);
-    });
-});
-
-const loadPackageUnitTestTree = async (cargoPackage: ICargoPackage, log: Log) => new Promise<ILoadedTestsResult>(async (resolve, reject) => {
-    const manifestPath = cargoPackage.manifest_path;
-    const packageName = cargoPackage.name;
-    const packageRootDirectory = manifestPath.endsWith('Cargo.toml') ? manifestPath.slice(0, -10) : manifestPath;
-
-    try {
-        const cargoTestListResults = await Promise.all(cargoPackage.targets.map(async target => {
-            let cargoTestArgs = `-p ${packageName}`;
-            let targetKind = TargetType[target.kind[0]];
-            const targetName = target.name;
-            if (targetKind === TargetType.bin) {
-                cargoTestArgs += ` --bin ${targetName}`;
-            } else if (targetKind === TargetType.lib) {
-                cargoTestArgs += ' --lib';
-            } else if (libTargetTypes.includes(target.kind[0])) {
-                targetKind = TargetType.lib;
-                cargoTestArgs += ' --lib';
-            } else {
-                return undefined;
-            }
-            const output = await runCargoTestCommand(cargoTestArgs, packageRootDirectory, log);
-            return <ICargoTestListResult>{ output, nodeTarget: { targetType: targetKind, targetName } };
-        }));
-        resolve(parseCargoTestListResults(cargoPackage, cargoTestListResults));
-    } catch (err) {
-        reject(err);
-    }
-});
-
-const getCargoMetadata = async (workspaceDir: string, log: Log) => new Promise<ICargoMetadata>((resolve, reject) => {
-    const execArgs: childProcess.ExecOptions = {
-        cwd: workspaceDir,
-        maxBuffer: 300 * 1024
-    };
-    const cmd = 'cargo metadata --no-deps --format-version 1';
-    childProcess.exec(cmd, execArgs, (err, stdout) => {
-        if (err) {
-            return reject(err);
-        }
-        try {
-            const cargoMetadata: ICargoMetadata = JSON.parse(stdout);
-            resolve(cargoMetadata);
-        } catch (err) {
-            log.debug(err);
-            reject(new Error('Unable to parse cargo metadata output'));
-        }
-    });
-});
-
-const buildRootTestSuiteInfoNode = (packageTestNodes: ILoadedTestsResult[], testSuitesMap: Map<string, ITestSuiteNode>): TestSuiteInfo => {
-    const testSuiteNodes: TestSuiteInfo[] = [];
-    packageTestNodes.forEach(packageTestNode => {
-        if (packageTestNode && packageTestNode.rootTestSuite) {
-            testSuiteNodes.push(packageTestNode.rootTestSuite);
-        }
-    });
-
-    const rootNodeId = 'root';
+export const buildRootNodeInfo = (
+    testSuiteNodes: TestSuiteInfo[],
+    rootNodeId: string,
+    rootNodeLabel: string
+): IRootNodeInfo => {
     const rootTestSuiteNode = createEmptyTestSuiteNode(rootNodeId, null, true, NodeCategory.structural);
-    const rootTestInfo = createTestSuiteInfo(rootNodeId, 'rust');
+    const rootTestInfo = createTestSuiteInfo(rootNodeId, rootNodeLabel);
     rootTestInfo.children = testSuiteNodes.length === 1
         ? testSuiteNodes[0].children
         : rootTestInfo.children = testSuiteNodes;
 
     rootTestSuiteNode.childrenNodeIds = rootTestInfo.children.map(c => c.id);
-    testSuitesMap.set(rootNodeId, rootTestSuiteNode);
-    return rootTestInfo;
+    return { testSuiteInfo: rootTestInfo, testSuiteNode: rootTestSuiteNode };
 };
 
-export const loadUnitTests = async (workspaceRoot: string, log: Log): Promise<ILoadedTestsResult> => {
+export const loadPackageUnitTestTree = async (cargoPackage: ICargoPackage, log: Log) => new Promise<ILoadedTestsResult>(async (resolve, reject) => {
     try {
-        let testSuitesMap = new Map<string, ITestSuiteNode>();
-        let testCasesMap = new Map<string, ITestCaseNode>();
-        const packages = (await getCargoMetadata(workspaceRoot, log)).packages;
-        const packageTests = await Promise.all(packages.map(async p => {
-            const packageTestResult = await loadPackageUnitTestTree(p, log);
-            if (!packageTestResult) {
-                return undefined;
-            }
-            testSuitesMap = new Map([...testSuitesMap, ...packageTestResult.testSuitesMap]);
-            testCasesMap = new Map([...testCasesMap, ...packageTestResult.testCasesMap]);
-            return packageTestResult;
-        }));
-        // This condition will evaluate to true when there are no unit tests.
-        if (packageTests.length >= 1 && !packageTests[0]) {
+        const cargoTestListResults = await getCargoUnitTestListForPackage(cargoPackage, log);
+        resolve(parseCargoTestListResults(cargoPackage, cargoTestListResults));
+    } catch (err) {
+        const baseErrorMessage = `Fatal error while attempting to load unit tests for package: ${cargoPackage.name}`;
+        log.debug(`${baseErrorMessage}. Details: ${err}`);
+        reject(err);
+    }
+});
+
+/**
+ * Loads the specified types of tests for the packages using the provided loader function.
+ *
+ * @param {ICargoPackage[]} packages - The cargo packages in the workspace.
+ * @param {Log} log - The logger.
+ * @param loadTestTypeTreeForPackage
+ *
+ * @private - Only exposed for unit testing purposes
+ * @returns {Promise<ILoadedTestsResult[]>}
+ */
+export const loadTestsForPackages = async (
+    packages: ICargoPackage[],
+    log: Log,
+    loadTestTypeTreeForPackage: (cargoPackage: ICargoPackage, log: Log) => Promise<ILoadedTestsResult>
+): Promise<ILoadedTestsResult[]> => {
+    const packageTests = await Promise.all(packages.map(async p => {
+        const packageTestResult = await loadTestTypeTreeForPackage(p, log);
+        if (!packageTestResult) {
+            return undefined;
+        }
+        return packageTestResult;
+    }));
+    return packageTests.filter(Boolean);
+};
+
+/**
+ * Loads the unit tests.
+ *
+ * @param {ICargoPackage[]} packages - The packages to load tests from.
+ * @param {Log} log - The logger.
+ *
+ * @private - Only exposed for unit testing purposes
+ * @returns {Promise<ITestTypeLoadedTestsResult>}
+ */
+export const loadUnitTests = async (
+    packages: ICargoPackage[],
+    log: Log
+): Promise<ITestTypeLoadedTestsResult> => {
+    const results = await loadTestsForPackages(packages, log, loadPackageUnitTestTree);
+    if (!results || results.length === 0) {
+        return null;
+    }
+    const { testSuiteInfo: rootNode, testSuiteNode } = buildRootNodeInfo(results.map(r => r.rootTestSuite), 'unit', 'unit');
+    return { rootNode, results, testSuiteNode };
+};
+
+/**
+ * Loads the documentation tests.
+ *
+ * @param {ICargoPackage[]} packages - The packages to load tests from.
+ * @param {Log} log - The logger.
+ *
+ * @private - Only exposed for unit testing purposes
+ * @returns {Promise<ITestTypeLoadedTestsResult>}
+ */
+export const loadDocumentationTests = async (
+    _packages: ICargoPackage[],
+    _log: Log
+): Promise<ITestTypeLoadedTestsResult> => {
+    return Promise.reject(new Error('Not yet implemented.'));
+};
+
+/**
+ * Loads the integration tests.
+ *
+ * @param {ICargoPackage[]} packages - The packages to load tests from.
+ * @param {Log} log - The logger.
+ *
+ * @private - Only exposed for unit testing purposes
+ * @returns {Promise<ITestTypeLoadedTestsResult>}
+ */
+export const loadIntegrationTests = async (
+    _packages: ICargoPackage[],
+    _log: Log
+): Promise<ITestTypeLoadedTestsResult> => {
+    return Promise.reject(new Error('Not yet implemented.'));
+};
+
+/**
+ * Aggregates all the various loaded tests into the final resulting object.
+ *
+ * @param {ITestTypeLoadedTestsResult[]} workspaceTestResults - The collection of loaded tests for the workspace.
+ *
+ * @private - Only exposed for unit testing purposes
+ * @returns {ILoadedTestsResult}
+ */
+export const aggregateWorkspaceTestsResults = (workspaceTestResults: ITestTypeLoadedTestsResult[]): ILoadedTestsResult => {
+    let testSuitesMap = new Map<string, ITestSuiteNode>();
+    const testSuitesMapIterators: [string, ITestSuiteNode][] = [];
+    const testCasesMapIterators: [string, ITestCaseNode][] = [];
+    const rootTestInfoNodes: TestSuiteInfo[] = [];
+    workspaceTestResults.forEach(result => {
+        rootTestInfoNodes.push(result.rootNode);
+        testSuitesMap.set(result.testSuiteNode.id, result.testSuiteNode);
+        result.results.map(r => {
+            testSuitesMapIterators.push(...r.testSuitesMap);
+            testCasesMapIterators.push(...r.testCasesMap);
+        });
+    });
+    testSuitesMap = new Map<string, ITestSuiteNode>([...testSuitesMap, ...testSuitesMapIterators]);
+    const testCasesMap = new Map<string, ITestCaseNode>(testCasesMapIterators);
+    const { testSuiteInfo, testSuiteNode } = buildRootNodeInfo(rootTestInfoNodes, 'root', 'rust');
+    testSuitesMap.set(testSuiteNode.id, testSuiteNode);
+    return { rootTestSuite: testSuiteInfo, testSuitesMap, testCasesMap };
+};
+
+/**
+ * Builds the final result object containing the loaded tests for the workspace.
+ *
+ * @param {ITestTypeLoadedTestsResult[]} workspaceTestResults - The results of loading tests for the workspace
+ *
+ * @private - Only exposed for unit testing purposes
+ * @returns {ILoadedTestsResult|null} - Returns null on empty/invalid input.
+ */
+export const buildWorkspaceLoadedTestsResult = (workspaceTestResults: ITestTypeLoadedTestsResult[]): ILoadedTestsResult => {
+    if (!workspaceTestResults || workspaceTestResults.length === 0) {
+        return null;
+    }
+    const loadedTestsResults = workspaceTestResults.filter(Boolean);
+    if (loadedTestsResults.length === 0) {
+        return null;
+    }
+    return aggregateWorkspaceTestsResults(loadedTestsResults);
+};
+
+/**
+ * Retrieves the test loader functions to use based on the provided configuration.
+ *
+ * @param {ICargoPackage[]} packages - The cargo packages in the workspace.
+ * @param {Log} log - The logger.
+ * @param {IConfiguration} config - The configuration options.
+ *
+ * @private - Only exposed for unit testing purposes
+ * @returns {Promise<ITestTypeLoadedTestsResult>[]}
+ */
+export const getTestLoaders = (packages: ICargoPackage[], log: Log, config: IConfiguration): Promise<ITestTypeLoadedTestsResult>[] => {
+    const promises: Promise<ITestTypeLoadedTestsResult>[] = [];
+    if (config.loadUnitTests) {
+        promises.push(loadUnitTests(packages, log));
+    }
+    if (config.loadDocumentationTests) {
+        promises.push(loadDocumentationTests(packages, log));
+    }
+    if (config.loadIntegrationTests) {
+        promises.push(loadIntegrationTests(packages, log));
+    }
+    return promises;
+};
+
+/**
+ * Loads the all the tests in the specified workspace based on the specified configuration.
+ *
+ * @param {string} workspaceRoot - The root directory of the Cargo workspace.
+ * @param {Log} log - The logger.
+ * @param {IConfiguration} config - The configuration options.
+ *
+ * @returns {Promise<ILoadedTestsResult>}
+ */
+export const loadWorkspaceTests = async (
+    workspaceRoot: string,
+    log: Log,
+    config: IConfiguration
+): Promise<ILoadedTestsResult> => {
+    try {
+        const { packages } = await getCargoMetadata(workspaceRoot, log);
+        if (!packages || packages.length === 0) {
             return Promise.resolve(null);
         }
-        const rootNode = buildRootTestSuiteInfoNode(packageTests, testSuitesMap);
-        return Promise.resolve({ rootTestSuite: rootNode, testSuitesMap, testCasesMap });
+        const testLoaderPromises = getTestLoaders(packages, log, config);
+        const workspaceTestResults: ITestTypeLoadedTestsResult[] = await Promise.all(testLoaderPromises);
+        return buildWorkspaceLoadedTestsResult(workspaceTestResults);
     } catch (err) {
+        const baseErrorMessage = `Fatal error while attempting to load tests for workspace ${workspaceRoot}`;
+        log.debug(`${baseErrorMessage}. Details: ${err}`);
         return Promise.reject(err);
     }
 };

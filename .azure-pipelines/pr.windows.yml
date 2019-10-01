@@ -1,0 +1,26 @@
+trigger:
+- master
+
+pr:
+- master
+
+pool:
+  vmImage: 'vs2017-win2016'
+
+resources:
+  repositories:
+  - repository: templates
+    type: github
+    name: swellaby/azure-pipelines-templates
+    endpoint: swellaby
+
+steps:
+- template: templates/yml/node/combo/npm-test-lint-validation-xunit-cobertura.yml@templates
+  parameters:
+    publishTestResults:
+      taskDisplayName: 'Publish unit test results'
+      testResultsFormat: 'JUnit'
+      testResultsFiles: 'xunit.xml'
+      searchFolder: '$(Build.SourcesDirectory)/.testresults/unit'
+      testRunTitle: 'vscode-rust-test-adapter::Unit Tests::Windows PR - Build $(Build.BuildId)'
+
