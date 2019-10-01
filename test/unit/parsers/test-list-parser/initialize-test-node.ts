@@ -5,7 +5,6 @@ import * as Sinon from 'sinon';
 
 import { initializeTestNode } from '../../../../src/parsers/test-list-parser';
 import { cargoTestListResults, cargoPackages } from '../../../test-utils';
-import { NodeCategory } from '../../../../src/enums/node-category';
 import { TestInfo } from 'vscode-test-adapter-api';
 import * as utils from '../../../../src/utils';
 import { ICargoTestListResult } from '../../../../src/interfaces/cargo-test-list-result';

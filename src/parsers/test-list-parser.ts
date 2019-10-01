@@ -17,13 +17,13 @@ import { NodeCategory } from '../enums/node-category';
 
 export const updateTestTree = (
     testNode: TestInfo,
-    packageRootNode: TestSuiteInfo,
+    targetRootNode: TestSuiteInfo,
     modulePathParts: string[],
     testModulesMap: Map<string, ITestSuiteNode>,
     associatedPackage: ICargoPackage,
     nodeTarget: INodeTarget
 ) => {
-    let currentNode = packageRootNode;
+    let currentNode = targetRootNode;
     let testSpecName = '';
     // This is easier to grok inline than it would be if it were split across multiple functions
     // eslint-disable-next-line max-statements
@@ -67,7 +67,7 @@ export const parseCargoTestListOutput = (
     nodeIdPrefix: string,
     cargoPackage: ICargoPackage,
     testCasesMap: Map<string, ITestCaseNode>,
-    packageSuiteInfo: TestSuiteInfo,
+    targetSuiteInfo: TestSuiteInfo,
     testSuitesMap: Map<string, ITestSuiteNode>
 ) => {
     const testsOutput = cargoTestListResult.output.split('\n\n')[0];
@@ -76,7 +76,7 @@ export const parseCargoTestListOutput = (
         const modulePathParts = trimmedModulePathParts.split('::');
         const testName = modulePathParts.pop();
         const testNode = initializeTestNode(trimmedModulePathParts, testName, nodeIdPrefix, cargoPackage, testCasesMap, cargoTestListResult.nodeTarget);
-        updateTestTree(testNode, packageSuiteInfo, modulePathParts, testSuitesMap, cargoPackage, cargoTestListResult.nodeTarget);
+        updateTestTree(testNode, targetSuiteInfo, modulePathParts, testSuitesMap, cargoPackage, cargoTestListResult.nodeTarget);
     });
 };
 
