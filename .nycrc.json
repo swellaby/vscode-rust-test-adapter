@@ -1,7 +1,7 @@
 {
   "extends": "@swellaby/nyc-config",
   "cache": false,
-  "all": true,
+  "all": false,
   "include": [
     "src/**/*"
   ],
@@ -10,6 +10,6 @@
     "src/main.ts"
   ],
   "extension": [
-    ".ts"
+    "ts"
   ]
 }
