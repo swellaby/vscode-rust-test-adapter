@@ -6,10 +6,15 @@
     "src/**/*"
   ],
   "exclude": [
+    "**/node_modules/**",
     "src/interfaces/**",
-    "src/main.ts"
+    "src/main.ts",
+    "**/*.d.ts",
+    "test/**",
+    ".coverage/**",
+    ".testresults/**"
   ],
   "extension": [
-    "ts"
+    ".ts"
   ]
 }
