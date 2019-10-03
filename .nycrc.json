@@ -1,18 +1,13 @@
 {
   "extends": "@swellaby/nyc-config",
   "cache": false,
-  "all": true,
+  "all": false,
   "include": [
     "src/**/*"
   ],
   "exclude": [
-    "**/node_modules/**",
     "src/interfaces/**",
-    "src/main.ts",
-    "**/*.d.ts",
-    "test/**",
-    ".coverage/**",
-    ".testresults/**"
+    "src/main.ts"
   ],
   "extension": [
     ".ts"
