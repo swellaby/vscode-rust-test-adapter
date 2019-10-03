@@ -14,7 +14,7 @@ resources:
     endpoint: swellaby
 
 steps:
-- template: templates/yml/node/combo/npm-test-lint-validation-xunit-cobertura.yml@templates
+- template: templates/yml/node/combo/npm-build-validation-xunit-cobertura.yml@templates
   parameters:
     publishTestResults:
       taskDisplayName: 'Publish unit test results'
