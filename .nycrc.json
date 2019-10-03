@@ -1,7 +1,7 @@
 {
   "extends": "@swellaby/nyc-config",
   "cache": false,
-  "all": false,
+  "all": true,
   "include": [
     "src/**/*"
   ],
