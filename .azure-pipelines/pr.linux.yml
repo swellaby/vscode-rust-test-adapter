@@ -14,7 +14,11 @@ resources:
     endpoint: swellaby
 
 steps:
-- template: templates/yml/node/combo/npm-test-lint-validation-xunit-cobertura.yml@templates
+- script: |
+    rm -rf .nyc_output .coverage
+  displayName: 'Clean up'
+
+- template: templates/yml/node/combo/npm-build-validation-xunit-cobertura.yml@templates
   parameters:
     publishTestResults:
       taskDisplayName: 'Publish unit test results'
