@@ -14,6 +14,10 @@ resources:
     endpoint: swellaby
 
 steps:
+- script: |
+    rm -rf .nyc_output .coverage
+  displayName: 'Clean up'
+
 - template: templates/yml/node/combo/npm-build-validation-xunit-cobertura.yml@templates
   parameters:
     publishTestResults:
