@@ -140,7 +140,7 @@ export const aggregateWorkspaceTestsResults = (workspaceTestResults: ITestTypeLo
     workspaceTestResults.forEach(result => {
         rootTestInfoNodes.push(result.rootNode);
         testSuitesMap.set(result.testSuiteNode.id, result.testSuiteNode);
-        result.results.map(r => {
+        result.results.forEach(r => {
             testSuitesMapIterators.push(...r.testSuitesMap);
             testCasesMapIterators.push(...r.testCasesMap);
         });
