@@ -6,6 +6,19 @@ Rust Test Explorer for VS Code that enables viewing and running your Rust tests 
 **Bugs are inevitable** 😁
 ***************************************
 
+[![Version Badge][version-badge]][ext-url]
+[![Installs Badge][installs-badge]][ext-url]
+[![Rating Badge][rating-badge]][ext-url]
+[![License Badge][license-badge]][license-url]  
+
+[![Linux CI Badge][linux-ci-badge]][linux-ci-url]
+[![Mac CI Badge][mac-ci-badge]][mac-ci-url]
+[![Windows CI Badge][windows-ci-badge]][windows-ci-url]  
+
+[![Test Results Badge][tests-badge]][tests-url]
+[![Coverage Badge][coverage-badge]][coverage-url]
+[![Sonar Quality GateBadge][quality-gate-badge]][sonar-project-url]
+
 See the [Test Explorer UI Extension](https://marketplace.visualstudio.com/items?itemName=hbenl.vscode-test-explorer) for more details on what this will look like when completed.
 
 ## Current Features
@@ -25,4 +38,22 @@ More info can be found in the [GitHub Project](https://github.com/swellaby/vscod
 ## License
 MIT - see license details [here][license-url] 
 
+
+[installs-badge]: https://img.shields.io/vscode-marketplace/i/swellaby.vscode-rust-test-adapter.svg?style=flat-square
+[version-badge]: https://img.shields.io/vscode-marketplace/v/swellaby.vscode-rust-test-adapter.svg?style=flat-square&label=marketplace
+[rating-badge]: https://img.shields.io/vscode-marketplace/r/swellaby.vscode-rust-test-adapter.svg?style=flat-square
+[ext-url]: https://marketplace.visualstudio.com/items?itemName=swellaby.vscode-rust-test-adapter
 [license-url]: https://github.com/swellaby/vscode-rust-test-adapter/blob/master/LICENSE
+[license-badge]: https://img.shields.io/github/license/swellaby/vscode-rust-test-adapter?style=flat-square&color=blue
+[linux-ci-badge]: https://img.shields.io/azure-devops/build/swellaby/opensource/69/master?label=linux%20build&style=flat-square
+[linux-ci-url]: https://dev.azure.com/swellaby/OpenSource/_build/latest?definitionId=69
+[mac-ci-badge]: https://img.shields.io/azure-devops/build/swellaby/opensource/98/master?label=mac%20build&style=flat-square
+[mac-ci-url]: https://dev.azure.com/swellaby/OpenSource/_build/latest?definitionId=98
+[windows-ci-badge]: https://img.shields.io/azure-devops/build/swellaby/opensource/99/master?label=windows%20build&style=flat-square
+[windows-ci-url]: https://dev.azure.com/swellaby/OpenSource/_build/latest?definitionId=99
+[coverage-badge]: https://img.shields.io/azure-devops/coverage/swellaby/opensource/98/master?style=flat-square
+[coverage-url]: https://codecov.io/gh/swellaby/vscode-rust-test-adapter
+[tests-badge]: https://img.shields.io/azure-devops/tests/swellaby/opensource/98/master?label=unit%20tests&style=flat-square
+[tests-url]: https://dev.azure.com/swellaby/OpenSource/_build/latest?definitionId=98&view=ms.vss-test-web.build-test-results-tab
+[quality-gate-badge]: https://img.shields.io/sonar/quality_gate/swellaby:vscode-rust-test-adapter?server=https%3A%2F%2Fsonarcloud.io&style=flat-square
+[sonar-project-url]: https://sonarcloud.io/dashboard?id=swellaby%3Avscode-rust-test-adapter
