@@ -19,7 +19,7 @@ Rust Test Explorer for VS Code that enables viewing and running your Rust tests 
 [![Coverage Badge][coverage-badge]][coverage-url]
 [![Sonar Quality GateBadge][quality-gate-badge]][sonar-project-url]  
 
-![Screenshot][screenshot-url]]
+![Screenshot][screenshot-url]
 
 See the [Test Explorer UI Extension][test-explorer-extension-url] for additional information.
 
