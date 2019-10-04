@@ -1,3 +1,4 @@
+.azure-pipelines/
 .testresults/
 .coverage/
 .nyc_output/
