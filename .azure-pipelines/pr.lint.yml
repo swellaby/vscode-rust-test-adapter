@@ -1,0 +1,18 @@
+trigger: none
+
+pr:
+- master
+
+pool:
+  vmImage: 'Ubuntu-16.04'
+
+resources:
+  repositories:
+  - repository: templates
+    type: github
+    name: swellaby/azure-pipelines-templates
+    endpoint: swellaby
+
+steps:
+- template: templates/yml/node/steps/simple/npm-install.yml@templates
+- template: templates/yml/node/steps/simple/npm-run-lint.yml@templates
