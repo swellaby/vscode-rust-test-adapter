@@ -51,8 +51,8 @@ export default function suite() {
         assert.deepEqual(nodeTarget.targetType, TargetType.test);
     });
 
-    test('Should return lib target type for staticlib target kind', () => {
-        const targetKind = 'staticlib';
+    test('Should return lib target type for cdylib target kind', () => {
+        const targetKind = 'cdylib';
         const packageTarget = <ICargoPackageTarget>{ kind: [targetKind], name: targetName };
         const nodeTarget = getCargoNodeTarget(packageTarget, logStub);
         assert.deepEqual(nodeTarget.targetName, targetName);
@@ -67,8 +67,8 @@ export default function suite() {
         assert.deepEqual(nodeTarget.targetType, TargetType.lib);
     });
 
-    test('Should return lib target type for cdylib target kind', () => {
-        const targetKind = 'cdylib';
+    test('Should return lib target type for proc-macro target kind', () => {
+        const targetKind = 'proc-macro';
         const packageTarget = <ICargoPackageTarget>{ kind: [targetKind], name: targetName };
         const nodeTarget = getCargoNodeTarget(packageTarget, logStub);
         assert.deepEqual(nodeTarget.targetName, targetName);
@@ -77,6 +77,14 @@ export default function suite() {
 
     test('Should return lib target type for rlib target kind', () => {
         const targetKind = 'rlib';
+        const packageTarget = <ICargoPackageTarget>{ kind: [targetKind], name: targetName };
+        const nodeTarget = getCargoNodeTarget(packageTarget, logStub);
+        assert.deepEqual(nodeTarget.targetName, targetName);
+        assert.deepEqual(nodeTarget.targetType, TargetType.lib);
+    });
+
+    test('Should return lib target type for staticlib target kind', () => {
+        const targetKind = 'staticlib';
         const packageTarget = <ICargoPackageTarget>{ kind: [targetKind], name: targetName };
         const nodeTarget = getCargoNodeTarget(packageTarget, logStub);
         assert.deepEqual(nodeTarget.targetName, targetName);
