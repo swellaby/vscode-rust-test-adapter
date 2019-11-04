@@ -14,7 +14,14 @@ import { ICargoTestExecutionParameters } from './interfaces/cargo-test-execution
 // Other types of various lib targets that may be listed in the Cargo metadata.
 // However, we still need to use --lib for both test detection and execution with all of these.
 // See https://github.com/swellaby/vscode-rust-test-adapter/issues/34
-const libTargetTypes = [ 'staticlib', 'dylib', 'cdylib', 'rlib' ];
+// and https://github.com/swellaby/vscode-rust-test-adapter/issues/52
+const libTargetTypes = [
+    'cdylib',
+    'dylib',
+    'proc-macro',
+    'rlib',
+    'staticlib'
+];
 const unitTestTargetTypes = [ TargetType.bin, TargetType.lib ];
 
 export const runCargoCommand = async (
