@@ -5,7 +5,7 @@ pr:
 - master
 
 pool:
-  vmImage: 'vs2017-win2016'
+  vmImage: 'win1803'
 
 resources:
   repositories:
@@ -15,6 +15,11 @@ resources:
     endpoint: swellaby
 
 steps:
+- script: |
+    npm install -g npm@6.9.0
+    npm run prepare - successful
+  displayName: 'Temp npm version set'
+
 - template: templates/yml/node/combo/npm-coverage-validation-xunit-cobertura.yml@templates
   parameters:
     publishTestResults:
