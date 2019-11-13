@@ -111,6 +111,7 @@ export const parseCargoTestListResult = (
  *
  * @returns {ILoadedTestsResult}
  */
+// tslint:disable-next-line:max-func-body-length
 export const parseCargoTestListResults = (cargoPackage: ICargoPackage, cargoTestListResults: ICargoTestListResult[]): ILoadedTestsResult => {
     if (!cargoPackage || !cargoTestListResults || cargoTestListResults.length === 0) {
         return undefined;
@@ -123,9 +124,14 @@ export const parseCargoTestListResults = (cargoPackage: ICargoPackage, cargoTest
     const testCasesMap: Map<string, ITestCaseNode> = new Map<string, ITestCaseNode>();
 
     cargoTestListResults.forEach(cargoTestListResult => {
-        if (!cargoTestListResult || cargoTestListResult.output.indexOf('0 tests,') >= 0) {
+        if (!cargoTestListResult) {
             return;
         }
+        const { output } = cargoTestListResult;
+        if (output.startsWith('0 tests,') || output.indexOf('\n0 tests,') >= 0) {
+            return;
+        }
+
         parseCargoTestListResult(cargoTestListResult, packageName, cargoPackage, packageRootNode, testSuitesMap, packageSuiteInfo, testCasesMap);
     });
 
