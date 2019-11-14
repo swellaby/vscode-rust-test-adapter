@@ -115,6 +115,23 @@ export default function suite() {
         });
     });
 
+    test('Should return correct result when test results has no discovered unit tests but one or more benchmarks', () => {
+        const noDiscoveredTests = [
+            undefined,
+            <ICargoTestListResult> {
+                output: 'foo\n0 tests, 2 benchmarks'
+            }
+        ];
+        const loadedTestsResult: ILoadedTestsResult = parseCargoTestListResults(swansonLibPackage, noDiscoveredTests);
+        const testSuitesMap = new Map<string, ITestSuiteNode>();
+        testSuitesMap.set(packageName, stubTestSuiteNode);
+        assert.deepEqual(loadedTestsResult, <ILoadedTestsResult> {
+            rootTestSuite: stubTestSuiteInfo,
+            testCasesMap: new Map<string, ITestCaseNode>(),
+            testSuitesMap
+        });
+    });
+
     test('Should pass correct args to parseCargoTestListResult with valid package and discovered tests', () => {
         const testSuitesMap = new Map<string, ITestSuiteNode>();
         testSuitesMap.set(packageName, stubTestSuiteNode);
@@ -137,6 +154,18 @@ export default function suite() {
             ...commonCallArgs
         ));
         assert.deepEqual(parseCargoTestListResultStub.callCount, 2);
+    });
+
+    // https://github.com/swellaby/vscode-rust-test-adapter/issues/54
+    test('Should correctly handle load when test count is a multiple of 10', () => {
+        const multipleOfTenTests = [
+            undefined,
+            <ICargoTestListResult> {
+                output: '\n80 tests, 0 benchmarks'
+            }
+        ];
+        parseCargoTestListResults(swansonLibPackage, multipleOfTenTests);
+        assert.isTrue(parseCargoTestListResultStub.called);
     });
 
     test('Should flatten root node children when there is only a single child', () => {
