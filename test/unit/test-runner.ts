@@ -160,10 +160,16 @@ suite('testRunner Tests:', () => {
         });
 
         test('Should return correct result on successful execution and parse', async () => {
-            const result = await runTestSuite(testSuite, workspaceDir, logStub, null);
-            // The stubs are currently configured to return the same 2 events on each call, so
-            // the expected value would be an array of 4 items, the repeated 2 events for each of the 2 targets.
-            assert.deepEqual(result, [ expTestEvent, expTestEvent2, expTestEvent, expTestEvent2 ]);
+            const firstTest = buildTestEvent('passed', 'swanson::bin::foo::test_one');
+            const secondTest = buildTestEvent('passed', 'swanson::bin::foo::test_two');
+            const thirdTest = buildTestEvent('passed', 'swanson::bin::bar::foo::test_baz');
+            const suite = JSON.parse(JSON.stringify(testSuite));
+            suite.id = 'swanson::bin::foo';
+            parseTestCaseResultPrettyOutputStub.onFirstCall().callsFake(() => [ firstTest, thirdTest ]);
+            parseTestCaseResultPrettyOutputStub.onSecondCall().callsFake(() => [ secondTest ]);
+
+            const result = await runTestSuite(suite, workspaceDir, logStub, null);
+            assert.deepEqual(result, [ firstTest, secondTest ]);
         });
     });
 });
