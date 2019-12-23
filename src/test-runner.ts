@@ -58,7 +58,7 @@ export const runTestSuite = async (
     _config: IConfiguration
 ) => new Promise<TestEvent[]>(async (resolve, reject) => {
     try {
-        const { packageName, testSpecName, targets } = testSuiteNode;
+        const { packageName, testSpecName, targets, id } = testSuiteNode;
         const results = await Promise.all(targets.map(async target => {
             const testIdPrefix = `${packageName}::${target.targetName}::${target.targetType}`;
             const params = <ICargoTestExecutionParameters> {
@@ -68,7 +68,7 @@ export const runTestSuite = async (
                 targetWorkspace: workspaceRootDir
             };
             const output = await runCargoTestsForPackageTargetWithPrettyFormat(params);
-            return parseTestCaseResultPrettyOutput(testIdPrefix, output);
+            return parseTestCaseResultPrettyOutput(testIdPrefix, output).filter(e => e.test.toString().startsWith(id));
         }));
 
         resolve([].concat(...results));
