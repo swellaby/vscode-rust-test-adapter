@@ -5,7 +5,7 @@ pr:
 - master
 
 pool:
-  vmImage: 'windows-latestf'
+  vmImage: 'windows-latest'
 
 resources:
   repositories:
