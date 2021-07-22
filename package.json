@@ -87,7 +87,7 @@
     "@swellaby/nyc-config": "^3.0.12",
     "@swellaby/tslint-config": "^3.0.1",
     "@types/chai": "^4.2.19",
-    "@types/mocha": "^8.2.2",
+    "@types/mocha": "^9.0.0",
     "@types/node": "^15.12.4",
     "@types/sinon": "^10.0.2",
     "chai": "^4.3.4",
