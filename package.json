@@ -91,7 +91,7 @@
     "@types/node": "^15.12.4",
     "@types/sinon": "^10.0.2",
     "chai": "^4.3.4",
-    "eslint": "^7.29.0",
+    "eslint": "^8.0.0",
     "husky": "^4.2.5",
     "mocha": "^9.0.1",
     "mocha-multi-reporters": "^1.1.7",
