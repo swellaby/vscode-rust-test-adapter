@@ -34,6 +34,6 @@ suite('Metadata Tests:', () => {
     });
 
     test('Should have correct VS Code engine', () => {
-        assert.deepEqual(manifest.engines.vscode, '^1.21.0');
+        assert.deepEqual(manifest.engines.vscode, '^1.34.0');
     });
 });
