@@ -91,7 +91,7 @@
     "@types/sinon": "^10.0.2",
     "@types/vscode": "^1.34.0",
     "chai": "^4.3.4",
-    "eslint": "^8.5.0",
+    "eslint": "^8.6.0",
     "husky": "^4.2.5",
     "mocha": "^9.0.1",
     "mocha-multi-reporters": "^1.1.7",
