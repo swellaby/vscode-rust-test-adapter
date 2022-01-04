@@ -2,6 +2,9 @@ version: 2
 updates:
 - package-ecosystem: npm
   directory: '/'
+  ignore:
+    # This is pinned to an older version based on the consumed VS Code APIs
+    - dependency-name: '@types/vscode'
   schedule:
     interval: weekly
     day: wednesday
