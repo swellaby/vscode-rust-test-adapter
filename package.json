@@ -65,7 +65,7 @@
     "dev:setup": "npm i && npm run build"
   },
   "categories": [
-    "Other"
+    "Testing"
   ],
   "keywords": [
     "test",

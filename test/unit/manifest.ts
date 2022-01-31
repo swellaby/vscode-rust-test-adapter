@@ -17,7 +17,7 @@ suite('Metadata Tests:', () => {
     });
 
     test('Should have correct extension categories', () => {
-        assert.isTrue(manifest.categories.includes('Other'));
+        assert.isTrue(manifest.categories.includes('Testing'));
     });
 
     test('Should have correct keywords', () => {
