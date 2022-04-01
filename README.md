@@ -2,6 +2,10 @@
 Rust Test Explorer for VS Code that enables viewing and running your Rust tests from the VS Code Sidebar. 
 
 ***************************************
+**Important Note: Development has been stopped !**  
+**Current Features are still Functional,**  
+**But no New Features will be added or Bugs fixed**
+***************************************
 **Functional, but still in an early Beta/Preview !!!!**  
 **Bugs are inevitable** 😁
 ***************************************
