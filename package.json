@@ -97,7 +97,7 @@
     "mocha-multi-reporters": "^1.1.7",
     "mocha-sonarqube-reporter": "^1.0.1",
     "nyc": "^15.1.0",
-    "open-cli": "^7.0.0",
+    "open-cli": "^7.1.0",
     "replace-in-file": "^6.3.5",
     "rimraf": "^3.0.2",
     "sinon": "^14.0.0",
